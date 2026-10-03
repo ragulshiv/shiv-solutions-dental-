@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getNavigationForRole } from '@/config/nav'
+import { useAiEnabled, AI_ONLY_PATHS } from '@/components/ai/ai-enabled'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -20,7 +21,8 @@ interface SidebarProps {
 
 export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps) {
   const pathname = usePathname()
-  const navigation = getNavigationForRole(role)
+  const aiEnabled = useAiEnabled()
+  const navigation = getNavigationForRole(role, aiEnabled ? [] : AI_ONLY_PATHS)
   const { isCollapsed, toggleSidebar } = useSidebar()
 
   return (

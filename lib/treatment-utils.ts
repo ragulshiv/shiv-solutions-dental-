@@ -252,10 +252,33 @@ export const toothNumbers = {
   upperRight: [18, 17, 16, 15, 14, 13, 12, 11],
   // Upper Left (Quadrant 2)
   upperLeft: [21, 22, 23, 24, 25, 26, 27, 28],
-  // Lower Left (Quadrant 3)
-  lowerLeft: [38, 37, 36, 35, 34, 33, 32, 31],
+  // Lower Left (Quadrant 3), shown midline → outwards like the upper row
+  lowerLeft: [31, 32, 33, 34, 35, 36, 37, 38],
   // Lower Right (Quadrant 4)
-  lowerRight: [41, 42, 43, 44, 45, 46, 47, 48],
+  lowerRight: [48, 47, 46, 45, 44, 43, 42, 41],
+}
+
+// Milk teeth (FDI 51–85), laid out the same way as the adult rows
+export const primaryToothNumbers = {
+  upperRight: [55, 54, 53, 52, 51],
+  upperLeft: [61, 62, 63, 64, 65],
+  lowerLeft: [71, 72, 73, 74, 75],
+  lowerRight: [85, 84, 83, 82, 81],
+}
+
+export const ALL_TOOTH_NUMBERS: number[] = [
+  ...Object.values(toothNumbers).flat(),
+  ...Object.values(primaryToothNumbers).flat(),
+]
+
+export type Dentition = 'adult' | 'child' | 'mixed'
+
+/** Which chart to open by default: milk teeth under 6, both until 13. */
+export function dentitionForAge(age?: number | null): Dentition {
+  if (age == null) return 'adult'
+  if (age < 6) return 'child'
+  if (age < 13) return 'mixed'
+  return 'adult'
 }
 
 // Tooth names by number (FDI notation)
@@ -296,6 +319,26 @@ export const toothNames: Record<number, string> = {
   46: 'Lower Right First Molar',
   47: 'Lower Right Second Molar',
   48: 'Lower Right Third Molar',
+}
+
+// Milk tooth names (51–85)
+const PRIMARY_QUADRANTS: Record<number, string> = {
+  5: 'Upper Right',
+  6: 'Upper Left',
+  7: 'Lower Left',
+  8: 'Lower Right',
+}
+const PRIMARY_TYPES = [
+  'Central Incisor',
+  'Lateral Incisor',
+  'Canine',
+  'First Molar',
+  'Second Molar',
+]
+for (const q of [5, 6, 7, 8]) {
+  for (let i = 1; i <= 5; i++) {
+    toothNames[q * 10 + i] = `${PRIMARY_QUADRANTS[q]} Primary ${PRIMARY_TYPES[i - 1]}`
+  }
 }
 
 // Format treatment duration in minutes to readable string
@@ -348,17 +391,25 @@ export function formatToothNumbers(teeth: number[]): string {
 // Get tooth quadrant from tooth number
 export function getToothQuadrant(toothNumber: number): 1 | 2 | 3 | 4 {
   const firstDigit = Math.floor(toothNumber / 10)
-  return firstDigit as 1 | 2 | 3 | 4
+  // Milk-tooth quadrants 5–8 map onto adult quadrants 1–4
+  return (firstDigit > 4 ? firstDigit - 4 : firstDigit) as 1 | 2 | 3 | 4
+}
+
+/** Milk teeth are quadrants 5–8 (51–85): 1–2 incisors, 3 canine, 4–5 molars, no premolars. */
+export function isPrimaryTooth(toothNumber: number): boolean {
+  return Math.floor(toothNumber / 10) >= 5
 }
 
 // Check if tooth is a molar
 export function isMolar(toothNumber: number): boolean {
   const lastDigit = toothNumber % 10
+  if (isPrimaryTooth(toothNumber)) return lastDigit === 4 || lastDigit === 5
   return lastDigit >= 6 && lastDigit <= 8
 }
 
 // Check if tooth is a premolar
 export function isPremolar(toothNumber: number): boolean {
+  if (isPrimaryTooth(toothNumber)) return false
   const lastDigit = toothNumber % 10
   return lastDigit === 4 || lastDigit === 5
 }

@@ -76,6 +76,8 @@ import {
   Smile,
   Shield,
   Pen,
+  AlertTriangle,
+  Plus,
 } from 'lucide-react'
 import { DentalChart } from '@/components/dental-chart'
 import { Patient360 } from '@/components/ai/patient-360'
@@ -85,6 +87,11 @@ import { ImageViewer } from '@/components/imaging/image-viewer'
 import { ImageAnnotator, type Annotation } from '@/components/imaging/image-annotator'
 import { ImageCompare } from '@/components/imaging/image-compare'
 import { uploadUrl } from '@/lib/storage/keys'
+import { AiOnly } from '@/components/ai/ai-enabled'
+import { labelFor } from '@/lib/labels'
+import { medicalAlerts } from '@/lib/patient-utils'
+import { useCurrentUser, can } from '@/components/layout/current-user'
+import { getDoctorName } from '@/lib/appointment-utils'
 
 interface Patient {
   id: string
@@ -105,12 +112,12 @@ interface Patient {
   emergencyContactName?: string
   emergencyContactPhone?: string
   emergencyContactRelation?: string
-  medicalHistory?: {
-    allergies?: string[]
-    chronicConditions?: string[]
-    currentMedications?: string[]
-    familyHistory?: string
-  }
+  age?: number | null
+  balanceDue?: number
+  todayAppointment?: { id: string; status: string; scheduledTime: string } | null
+  medicalHistory?: Record<string, any> | null
+  prescriptions?: any[]
+  treatmentPlans?: any[]
   appointments: any[]
   treatments: any[]
   invoices: any[]
@@ -189,6 +196,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
   const [patient, setPatient] = useState<Patient | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const { role } = useCurrentUser()
 
   // Document upload state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
@@ -432,42 +440,112 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
+  const alerts = medicalAlerts(patient.medicalHistory)
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex items-start gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/patients')}>
+        <div className="flex items-start gap-3 md:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/patients')}
+            aria-label="Back to patients"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Avatar className="h-16 w-16">
+          <Avatar className="h-12 w-12 md:h-16 md:w-16">
             <AvatarFallback className="text-lg">
               {patient.firstName[0]}
-              {patient.lastName[0]}
+              {patient.lastName?.[0] || ''}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="min-w-0 space-y-1.5">
             <h1 className="text-2xl font-semibold tracking-tight">
               {patient.firstName} {patient.lastName}
             </h1>
-            <p className="text-muted-foreground">Patient ID: {patient.patientId}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline">{patient.gender}</Badge>
-              {patient.bloodGroup && <Badge variant="secondary">{patient.bloodGroup}</Badge>}
+            <p className="text-sm text-muted-foreground">
+              {[
+                patient.patientId,
+                patient.age != null ? `${patient.age} yrs` : null,
+                labelFor(patient.gender),
+                patient.bloodGroup ? labelFor(patient.bloodGroup) : null,
+                patient.phone,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {alerts.length > 0 ? (
+                alerts.map((a) => (
+                  <Badge key={a} variant="destructive" className="gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {a}
+                  </Badge>
+                ))
+              ) : (
+                <Link
+                  href={`/patients/${patient.id}/edit`}
+                  className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  No medical alerts recorded · add history
+                </Link>
+              )}
+              {(patient.balanceDue ?? 0) > 0 && (
+                <Badge variant="warning" className="tabular-nums">
+                  Due ₹{Number(patient.balanceDue).toLocaleString('en-IN')}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          {can.treat(role) && (
+            <Link
+              href={
+                patient.todayAppointment
+                  ? `/visits/${patient.todayAppointment.id}`
+                  : `/visits/new?patientId=${patient.id}`
+              }
+            >
+              <Button>
+                <Stethoscope className="h-4 w-4 mr-2" />
+                {patient.todayAppointment &&
+                ['CHECKED_IN', 'IN_PROGRESS'].includes(patient.todayAppointment.status)
+                  ? 'Open visit'
+                  : 'Start visit'}
+              </Button>
+            </Link>
+          )}
+          {can.book(role) && (
+            <Link href={`/appointments/new?patientId=${patient.id}`}>
+              <Button variant={can.treat(role) ? 'outline' : 'default'}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Book
+              </Button>
+            </Link>
+          )}
+          {can.treat(role) && (
+            <Link href={`/prescriptions/new?patientId=${patient.id}`}>
+              <Button variant="outline">
+                <Pill className="h-4 w-4 mr-2" />
+                Write Rx
+              </Button>
+            </Link>
+          )}
+          {can.bill(role) && (
+            <Link href={`/billing/invoices/new?patientId=${patient.id}`}>
+              <Button variant="outline">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Bill
+              </Button>
+            </Link>
+          )}
           <Link href={`/patients/${patient.id}/edit`}>
             <Button variant="outline">
               <Edit className="h-4 w-4 mr-2" />
               Edit
-            </Button>
-          </Link>
-          <Link href={`/appointments/new?patientId=${patient.id}`}>
-            <Button>
-              <Calendar className="h-4 w-4 mr-2" />
-              Book Appointment
             </Button>
           </Link>
         </div>
@@ -475,51 +553,57 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-9">
+        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto">
           <TabsTrigger value="overview" className="gap-2">
             <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Overview</span>
+            <span>Overview</span>
           </TabsTrigger>
           <TabsTrigger value="dental-chart" className="gap-2">
             <Smile className="h-4 w-4" />
-            <span className="hidden sm:inline">Dental Chart</span>
+            <span>Dental Chart</span>
           </TabsTrigger>
           <TabsTrigger value="timeline" className="gap-2">
             <History className="h-4 w-4" />
-            <span className="hidden sm:inline">Timeline</span>
+            <span>Timeline</span>
           </TabsTrigger>
           <TabsTrigger value="documents" className="gap-2">
             <FolderOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Documents</span>
+            <span>Documents</span>
             <Badge variant="secondary" className="ml-1">
               {patient._count.documents}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="appointments" className="gap-2">
             <Calendar className="h-4 w-4" />
-            <span className="hidden sm:inline">Appointments</span>
+            <span>Appointments</span>
           </TabsTrigger>
           <TabsTrigger value="treatments" className="gap-2">
             <Stethoscope className="h-4 w-4" />
-            <span className="hidden sm:inline">Treatments</span>
+            <span>Treatments</span>
+          </TabsTrigger>
+          <TabsTrigger value="prescriptions" className="gap-2">
+            <Pill className="h-4 w-4" />
+            <span>Prescriptions</span>
           </TabsTrigger>
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Billing</span>
+            <span>Billing</span>
           </TabsTrigger>
           <TabsTrigger value="forms" className="gap-2">
             <FileCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Forms</span>
+            <span>Forms</span>
           </TabsTrigger>
           <TabsTrigger value="insurance" className="gap-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Insurance</span>
+            <span>Insurance</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <Patient360 patientId={patient.id} />
+          <AiOnly>
+            <Patient360 patientId={patient.id} />
+          </AiOnly>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Contact Information */}
             <Card>
@@ -624,46 +708,42 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {patient.medicalHistory ? (
+                {patient.medicalHistory &&
+                (alerts.length > 0 ||
+                  patient.medicalHistory.currentMedications ||
+                  patient.medicalHistory.otherConditions) ? (
                   <div className="space-y-3">
-                    {patient.medicalHistory.allergies &&
-                      patient.medicalHistory.allergies.length > 0 && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Allergies</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {patient.medicalHistory.allergies.map((allergy, i) => (
-                              <Badge key={i} variant="destructive">
-                                {allergy}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    {patient.medicalHistory.chronicConditions &&
-                      patient.medicalHistory.chronicConditions.length > 0 && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Chronic Conditions</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {patient.medicalHistory.chronicConditions.map((condition, i) => (
-                              <Badge key={i} variant="secondary">
-                                {condition}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    {patient.medicalHistory.currentMedications &&
-                      patient.medicalHistory.currentMedications.length > 0 && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Current Medications</p>
-                          <p className="text-sm">
-                            {patient.medicalHistory.currentMedications.join(', ')}
-                          </p>
-                        </div>
-                      )}
+                    {alerts.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {alerts.map((a) => (
+                          <Badge key={a} variant="destructive">
+                            {a}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {patient.medicalHistory.currentMedications && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Current medicines</p>
+                        <p className="text-sm">{patient.medicalHistory.currentMedications}</p>
+                      </div>
+                    )}
+                    {patient.medicalHistory.otherConditions && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Other notes</p>
+                        <p className="text-sm">{patient.medicalHistory.otherConditions}</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No medical history recorded</p>
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground">No medical history recorded</p>
+                    <Link href={`/patients/${patient.id}/edit`}>
+                      <Button variant="outline" size="sm">
+                        Add medical history
+                      </Button>
+                    </Link>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -672,7 +752,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Dental Chart Tab */}
         <TabsContent value="dental-chart" className="space-y-6">
-          <DentalChart patientId={patient.id} />
+          <DentalChart patientId={patient.id} patientAge={patient.age} />
         </TabsContent>
 
         {/* Timeline Tab */}
@@ -1162,7 +1242,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   </TableHeader>
                   <TableBody>
                     {patient.appointments.map((apt) => (
-                      <TableRow key={apt.id}>
+                      <TableRow
+                        key={apt.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/appointments/${apt.id}`)}
+                      >
                         <TableCell>
                           <div>
                             <p className="font-medium">
@@ -1173,11 +1257,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>{apt.appointmentType}</TableCell>
+                        <TableCell>{labelFor(apt.appointmentType)}</TableCell>
                         <TableCell>
-                          {apt.doctor
-                            ? `Dr. ${apt.doctor.firstName} ${apt.doctor.lastName}`
-                            : 'Not assigned'}
+                          {apt.doctor ? getDoctorName(apt.doctor) : 'Not assigned'}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -1189,7 +1271,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                   : 'secondary'
                             }
                           >
-                            {apt.status}
+                            {labelFor(apt.status)}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -1204,9 +1286,26 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
         {/* Treatments Tab */}
         <TabsContent value="treatments" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Treatment History</CardTitle>
-              <CardDescription>Past procedures and treatments</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle>Treatment History</CardTitle>
+                <CardDescription>Past procedures and treatments</CardDescription>
+              </div>
+              {can.treat(role) && (
+                <div className="flex flex-wrap gap-2">
+                  <Link href={`/treatments/plans/new?patientId=${patient.id}`}>
+                    <Button variant="outline" size="sm">
+                      New plan
+                    </Button>
+                  </Link>
+                  <Link href={`/treatments/new?patientId=${patient.id}`}>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add treatment
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {patient.treatments.length === 0 ? (
@@ -1227,16 +1326,18 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                   </TableHeader>
                   <TableBody>
                     {patient.treatments.map((treatment) => (
-                      <TableRow key={treatment.id}>
+                      <TableRow
+                        key={treatment.id}
+                        className="cursor-pointer"
+                        onClick={() => router.push(`/treatments/${treatment.id}`)}
+                      >
                         <TableCell>{format(new Date(treatment.createdAt), 'PP')}</TableCell>
                         <TableCell className="font-medium">{treatment.procedure.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{treatment.procedure.category}</Badge>
+                          <Badge variant="outline">{labelFor(treatment.procedure.category)}</Badge>
                         </TableCell>
                         <TableCell>
-                          {treatment.doctor
-                            ? `Dr. ${treatment.doctor.firstName} ${treatment.doctor.lastName}`
-                            : 'N/A'}
+                          {treatment.doctor ? getDoctorName(treatment.doctor) : '—'}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -1248,7 +1349,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                   : 'secondary'
                             }
                           >
-                            {treatment.status}
+                            {labelFor(treatment.status)}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -1260,12 +1361,79 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           </Card>
         </TabsContent>
 
+        {/* Prescriptions Tab */}
+        <TabsContent value="prescriptions" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle>Prescriptions</CardTitle>
+                <CardDescription>Most recent first</CardDescription>
+              </div>
+              {can.treat(role) && (
+                <Link href={`/prescriptions/new?patientId=${patient.id}`}>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Write Rx
+                  </Button>
+                </Link>
+              )}
+            </CardHeader>
+            <CardContent>
+              {!patient.prescriptions || patient.prescriptions.length === 0 ? (
+                <p className="py-8 text-center text-muted-foreground">No prescriptions yet</p>
+              ) : (
+                <ul className="divide-y">
+                  {patient.prescriptions.map((rx: any) => (
+                    <li key={rx.id}>
+                      <Link
+                        href={`/prescriptions/${rx.id}`}
+                        className="flex flex-col gap-1 py-3 hover:bg-muted/40 md:flex-row md:items-start md:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium">
+                            {rx.prescriptionNo}
+                            {rx.diagnosis ? (
+                              <span className="font-normal text-muted-foreground">
+                                {' '}
+                                · {rx.diagnosis}
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {(rx.medications || [])
+                              .map((m: any) => `${m.medicationName} ${m.frequency} × ${m.duration}`)
+                              .join(', ')}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-sm text-muted-foreground">
+                          {format(new Date(rx.createdAt), 'PP')}
+                          {rx.doctor ? ` · ${getDoctorName(rx.doctor)}` : ''}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Billing Tab */}
         <TabsContent value="billing" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Billing History</CardTitle>
-              <CardDescription>Invoices and payment records</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>Invoices and payment records</CardDescription>
+              </div>
+              {can.bill(role) && (
+                <Link href={`/billing/invoices/new?patientId=${patient.id}`}>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New bill
+                  </Button>
+                </Link>
+              )}
             </CardHeader>
             <CardContent>
               {patient.invoices.length === 0 ? (
@@ -1291,7 +1459,11 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                         0
                       )
                       return (
-                        <TableRow key={invoice.id}>
+                        <TableRow
+                          key={invoice.id}
+                          className="cursor-pointer"
+                          onClick={() => router.push(`/billing/invoices/${invoice.id}`)}
+                        >
                           <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                           <TableCell>{format(new Date(invoice.createdAt), 'PP')}</TableCell>
                           <TableCell>₹{Number(invoice.totalAmount).toLocaleString()}</TableCell>
@@ -1306,7 +1478,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
                                     : 'secondary'
                               }
                             >
-                              {invoice.status}
+                              {labelFor(invoice.status)}
                             </Badge>
                           </TableCell>
                         </TableRow>

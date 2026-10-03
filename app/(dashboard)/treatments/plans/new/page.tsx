@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PatientPicker } from '@/components/patients/patient-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -35,6 +36,7 @@ import {
   GripVertical,
 } from 'lucide-react'
 import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
+import { ProcedurePicker } from '@/components/treatments/procedure-picker'
 
 interface Patient {
   id: string
@@ -68,11 +70,9 @@ export default function NewTreatmentPlanPage() {
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
 
-  const [patients, setPatients] = useState<Patient[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [patientSearch, setPatientSearch] = useState('')
 
   // Form state
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
@@ -92,19 +92,7 @@ export default function NewTreatmentPlanPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [patientsRes, proceduresRes] = await Promise.all([
-          fetch('/api/patients?limit=100'),
-          fetch('/api/procedures?all=true&isActive=true'),
-        ])
-
-        if (patientsRes.ok) {
-          const data = await patientsRes.json()
-          setPatients(data.patients)
-          if (preselectedPatientId) {
-            const patient = data.patients.find((p: Patient) => p.id === preselectedPatientId)
-            if (patient) setSelectedPatient(patient)
-          }
-        }
+        const proceduresRes = await fetch('/api/procedures?all=true&isActive=true')
 
         if (proceduresRes.ok) {
           const data = await proceduresRes.json()
@@ -116,17 +104,7 @@ export default function NewTreatmentPlanPage() {
     }
 
     fetchData()
-  }, [preselectedPatientId])
-
-  const filteredPatients = patients.filter((patient) => {
-    const searchLower = patientSearch.toLowerCase()
-    return (
-      patient.firstName.toLowerCase().includes(searchLower) ||
-      patient.lastName.toLowerCase().includes(searchLower) ||
-      patient.phone.includes(patientSearch) ||
-      patient.patientId.toLowerCase().includes(searchLower)
-    )
-  })
+  }, [])
 
   const groupedProcedures = procedures.reduce(
     (acc, proc) => {
@@ -261,60 +239,11 @@ export default function NewTreatmentPlanPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {selectedPatient ? (
-              <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {selectedPatient.firstName} {selectedPatient.lastName}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedPatient.patientId} | {selectedPatient.phone}
-                    </div>
-                  </div>
-                </div>
-                <Button type="button" variant="outline" onClick={() => setSelectedPatient(null)}>
-                  Change
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search patients..."
-                    value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <div className="max-h-60 overflow-y-auto border rounded-lg">
-                  {filteredPatients.slice(0, 10).map((patient) => (
-                    <button
-                      key={patient.id}
-                      type="button"
-                      onClick={() => setSelectedPatient(patient)}
-                      className="w-full flex items-center gap-4 p-3 hover:bg-muted/50 border-b last:border-b-0 text-left"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {patient.firstName} {patient.lastName}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {patient.patientId} | {patient.phone}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <PatientPicker
+              value={selectedPatient}
+              initialPatientId={preselectedPatientId}
+              onChange={(p) => setSelectedPatient(p as Patient | null)}
+            />
           </CardContent>
         </Card>
 
@@ -382,25 +311,11 @@ export default function NewTreatmentPlanPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Procedure</Label>
-                  <Select value={selectedProcedureId} onValueChange={setSelectedProcedureId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select procedure" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(groupedProcedures).map(([category, procs]) => (
-                        <div key={category}>
-                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            {procedureCategoryConfig[category]?.label || category}
-                          </div>
-                          {procs.map((proc) => (
-                            <SelectItem key={proc.id} value={proc.id}>
-                              {proc.code} - {proc.name}
-                            </SelectItem>
-                          ))}
-                        </div>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProcedurePicker
+                    procedures={procedures as any}
+                    value={selectedProcedureId}
+                    onChange={(p) => setSelectedProcedureId(p?.id || '')}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Tooth Numbers</Label>

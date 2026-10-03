@@ -55,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 interface InventoryItem {
   id: string
@@ -275,14 +276,16 @@ export default function InventoryPage() {
               }))
             }
           />
-          <Button variant="outline" onClick={fetchForecast} disabled={forecastLoading}>
-            {forecastLoading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Brain className="h-4 w-4 mr-2" />
-            )}
-            AI Forecast
-          </Button>
+          <AiOnly>
+            <Button variant="outline" onClick={fetchForecast} disabled={forecastLoading}>
+              {forecastLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Brain className="h-4 w-4 mr-2" />
+              )}
+              AI Forecast
+            </Button>
+          </AiOnly>
           <Link href="/inventory/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />

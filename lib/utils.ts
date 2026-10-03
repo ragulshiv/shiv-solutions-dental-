@@ -84,3 +84,8 @@ export function validateGSTIN(gstin: string): boolean {
   const stateCode = parseInt(gstin.substring(0, 2), 10)
   return stateCode >= 1 && stateCode <= 37
 }
+
+/** "Dr. Priya" → "Priya". The app adds "Dr." itself when showing doctors. */
+export function stripDoctorPrefix(name: string): string {
+  return typeof name === 'string' ? name.replace(/^\s*dr\.?\s+/i, '').trim() : name
+}

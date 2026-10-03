@@ -464,7 +464,7 @@ describe('POST /api/payment-plans/[id]/pay', () => {
   })
 
   it('returns 403 for unauthorized roles', async () => {
-    mockAuth({ session: { user: { id: 'u1', role: 'DOCTOR' } } })
+    mockAuth({ session: { user: { id: 'u1', role: 'LAB_TECH' } } })
     const res = await planPayPOST(
       makeReq('/api/payment-plans/pp1/pay', 'POST', { scheduleId: 'sch1' }),
       makeParams('pp1') as any

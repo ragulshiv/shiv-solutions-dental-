@@ -27,6 +27,8 @@ import {
   Timer,
   Calendar,
   AlertCircle,
+  Stethoscope,
+  UserPlus,
 } from 'lucide-react'
 import {
   appointmentStatusConfig,
@@ -35,6 +37,8 @@ import {
   getPatientName,
   getDoctorName,
 } from '@/lib/appointment-utils'
+import { useCurrentUser, can } from '@/components/layout/current-user'
+import { WalkInDialog } from '@/components/appointments/walk-in-dialog'
 
 interface Appointment {
   id: string
@@ -83,6 +87,8 @@ interface Doctor {
 }
 
 export default function QueueManagementPage() {
+  const { role } = useCurrentUser()
+  const [walkInOpen, setWalkInOpen] = useState(false)
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -115,7 +121,7 @@ export default function QueueManagementPage() {
   const fetchQueue = async () => {
     try {
       const params = new URLSearchParams()
-      if (selectedDoctor) params.append('doctorId', selectedDoctor)
+      if (selectedDoctor && selectedDoctor !== 'all') params.append('doctorId', selectedDoctor)
 
       const response = await fetch(`/api/appointments/today?${params}`)
       if (response.ok) {
@@ -310,18 +316,29 @@ export default function QueueManagementPage() {
                 </Button>
               </>
             )}
-            {appointment.status === 'CHECKED_IN' && (
-              <>
-                <Button size="sm" onClick={() => handleStartProgress(appointment.id)}>
-                  <Play className="h-4 w-4 mr-1" />
-                  Start
-                </Button>
-              </>
+            {can.treat(role) && ['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
+              <Button
+                size="sm"
+                onClick={() => router.push(`/visits/new?appointmentId=${appointment.id}`)}
+              >
+                <Stethoscope className="h-4 w-4 mr-1" />
+                {appointment.status === 'IN_PROGRESS' ? 'Open visit' : 'Start visit'}
+              </Button>
+            )}
+            {!can.treat(role) && appointment.status === 'CHECKED_IN' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleStartProgress(appointment.id)}
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Send in
+              </Button>
             )}
             {['CHECKED_IN', 'IN_PROGRESS'].includes(appointment.status) && (
               <Button size="sm" variant="outline" onClick={() => handleCheckOut(appointment.id)}>
                 <LogOut className="h-4 w-4 mr-1" />
-                Complete
+                Done
               </Button>
             )}
             <Button
@@ -352,7 +369,7 @@ export default function QueueManagementPage() {
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Today&apos;s Queue</h1>
           <p className="text-muted-foreground">{today}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="All Doctors" />
@@ -371,16 +388,28 @@ export default function QueueManagementPage() {
             Refresh
           </Button>
           <Link href="/appointments/new">
-            <Button>
+            <Button variant="outline">
               <Calendar className="h-4 w-4 mr-2" />
-              New Appointment
+              Book
             </Button>
           </Link>
+          {can.book(role) && (
+            <Button onClick={() => setWalkInOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Walk-in
+            </Button>
+          )}
         </div>
       </div>
+      <WalkInDialog
+        open={walkInOpen}
+        onOpenChange={setWalkInOpen}
+        doctors={doctors}
+        onAdded={() => fetchQueue()}
+      />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4 xl:grid-cols-7">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
@@ -451,7 +480,7 @@ export default function QueueManagementPage() {
           <div className="animate-pulse text-muted-foreground">Loading queue...</div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {/* Waiting */}
           <Card className="border-amber-200">
             <CardHeader className="bg-amber-50 border-b border-amber-200">

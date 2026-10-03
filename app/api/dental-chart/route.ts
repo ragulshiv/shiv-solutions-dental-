@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { ALL_TOOTH_NUMBERS } from '@/lib/treatment-utils'
 
 // GET - Get dental chart entries for a patient
 export async function GET(request: NextRequest) {
@@ -131,14 +132,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate tooth number (FDI notation: 11-18, 21-28, 31-38, 41-48)
-    const validToothNumbers = [
-      11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37,
-      38, 41, 42, 43, 44, 45, 46, 47, 48,
-    ]
+    // Adult teeth 11–48 and milk teeth 51–85 (FDI)
+    const validToothNumbers = ALL_TOOTH_NUMBERS
 
     if (!validToothNumbers.includes(toothNumber)) {
       return NextResponse.json(
-        { error: 'Invalid tooth number. Use FDI notation (11-18, 21-28, 31-38, 41-48)' },
+        { error: 'Invalid tooth number. Use FDI notation (11–48 adult, 51–85 milk teeth)' },
         { status: 400 }
       )
     }

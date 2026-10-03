@@ -28,6 +28,9 @@ import {
   toothNames,
   toothSurfaceLabels,
   getToothType,
+  primaryToothNumbers,
+  dentitionForAge,
+  type Dentition,
 } from '@/lib/treatment-utils'
 
 interface DentalChartEntry {
@@ -53,6 +56,8 @@ interface DentalChartProps {
   editable?: boolean
   selectedTeeth?: number[]
   onTeethSelect?: (teeth: number[]) => void
+  /** Picks the default chart: milk teeth for young children. */
+  patientAge?: number | null
 }
 
 const conditions = [
@@ -82,7 +87,10 @@ export function DentalChart({
   editable = false,
   selectedTeeth = EMPTY_TEETH,
   onTeethSelect,
+  patientAge,
 }: DentalChartProps) {
+  const [dentition, setDentition] = useState<Dentition>(dentitionForAge(patientAge))
+  useEffect(() => setDentition(dentitionForAge(patientAge)), [patientAge])
   const [chartData, setChartData] = useState<Record<number, DentalChartEntry[]>>({})
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -316,39 +324,61 @@ export function DentalChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col items-center gap-8 py-4">
-          {/* Upper Jaw */}
-          <div className="text-center">
-            <div className="text-sm font-medium text-muted-foreground mb-2">Upper Jaw</div>
-            <div className="flex gap-1 justify-center">
-              {/* Upper Right (18-11) */}
-              <div className="flex gap-1 border-r-2 border-border pr-2">
-                {toothNumbers.upperRight.map((num) => renderTooth(num, 'upper'))}
+        <div
+          className="mb-2 inline-flex rounded-lg border p-1"
+          role="group"
+          aria-label="Teeth shown"
+        >
+          {(['adult', 'mixed', 'child'] as Dentition[]).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDentition(d)}
+              aria-pressed={dentition === d}
+              className={`min-h-9 rounded-md px-3 text-sm font-medium ${
+                dentition === d
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {d === 'adult' ? 'Adult' : d === 'child' ? 'Milk teeth' : 'Mixed'}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-col items-center gap-6 overflow-x-auto py-4">
+          {(() => {
+            const row = (q: typeof toothNumbers, jaw: 'upper' | 'lower') => (
+              <div className="flex gap-1 justify-center">
+                <div className="flex gap-1 border-r-2 border-border pr-2">
+                  {(jaw === 'upper' ? q.upperRight : q.lowerRight).map((num) =>
+                    renderTooth(num, jaw)
+                  )}
+                </div>
+                <div className="flex gap-1 pl-2">
+                  {(jaw === 'upper' ? q.upperLeft : q.lowerLeft).map((num) =>
+                    renderTooth(num, jaw)
+                  )}
+                </div>
               </div>
-              {/* Upper Left (21-28) */}
-              <div className="flex gap-1 pl-2">
-                {toothNumbers.upperLeft.map((num) => renderTooth(num, 'upper'))}
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="w-full border-t border-border" />
-
-          {/* Lower Jaw */}
-          <div className="text-center">
-            <div className="flex gap-1 justify-center">
-              {/* Lower Right (48-41) */}
-              <div className="flex gap-1 border-r-2 border-border pr-2">
-                {toothNumbers.lowerRight.map((num) => renderTooth(num, 'lower'))}
-              </div>
-              {/* Lower Left (31-38) */}
-              <div className="flex gap-1 pl-2">
-                {toothNumbers.lowerLeft.map((num) => renderTooth(num, 'lower'))}
-              </div>
-            </div>
-            <div className="text-sm font-medium text-muted-foreground mt-2">Lower Jaw</div>
-          </div>
+            )
+            const showAdult = dentition !== 'child'
+            const showPrimary = dentition !== 'adult'
+            return (
+              <>
+                <div className="text-center space-y-2">
+                  <div className="text-sm font-medium text-muted-foreground">Upper Jaw</div>
+                  {showAdult && row(toothNumbers, 'upper')}
+                  {showPrimary && row(primaryToothNumbers, 'upper')}
+                </div>
+                <div className="w-full border-t border-border" />
+                <div className="text-center space-y-2">
+                  {showPrimary && row(primaryToothNumbers, 'lower')}
+                  {showAdult && row(toothNumbers, 'lower')}
+                  <div className="text-sm font-medium text-muted-foreground">Lower Jaw</div>
+                </div>
+              </>
+            )
+          })()}
         </div>
 
         {/* Selected teeth display */}

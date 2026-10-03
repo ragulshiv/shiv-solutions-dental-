@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { patientId, diagnosis, notes, validUntil, medications } = body
+    const { patientId, appointmentId, diagnosis, notes, validUntil, medications } = body
 
     if (!patientId || !medications || medications.length === 0) {
       return NextResponse.json(
@@ -100,6 +100,17 @@ export async function POST(request: NextRequest) {
     const patient = await prisma.patient.findFirst({ where: { id: patientId, hospitalId } })
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    }
+
+    // Visit this Rx was written in (optional)
+    if (appointmentId) {
+      const visit = await prisma.appointment.findFirst({
+        where: { id: appointmentId, hospitalId, patientId },
+        select: { id: true },
+      })
+      if (!visit) {
+        return NextResponse.json({ error: 'Visit not found for this patient' }, { status: 404 })
+      }
     }
 
     // Generate prescription number
@@ -127,6 +138,7 @@ export async function POST(request: NextRequest) {
         prescriptionNo,
         patientId,
         doctorId: staff.id,
+        appointmentId: appointmentId || null,
         diagnosis: diagnosis || null,
         notes: notes || null,
         validUntil: validUntil ? new Date(validUntil) : null,
@@ -154,9 +166,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: prescription }, { status: 201 })
   } catch (err: any) {
     console.error('Error creating prescription:', err)
-    return NextResponse.json(
-      { error: err.message || 'Failed to create prescription' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create prescription' }, { status: 500 })
   }
 }

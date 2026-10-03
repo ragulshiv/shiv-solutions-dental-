@@ -21,6 +21,9 @@ import { formatTime } from '@/lib/appointment-utils'
 import dynamic from 'next/dynamic'
 import { InsightsPanel } from '@/components/ai/insights-panel'
 import { EmptyHint } from '@/components/ui/empty-hint'
+import { AiOnly } from '@/components/ai/ai-enabled'
+import { labelFor } from '@/lib/labels'
+import { useCurrentUser, can } from '@/components/layout/current-user'
 
 // Charts load after the first paint (the chart library is ~120 KB compressed);
 // the stat cards and appointments render without waiting for it.
@@ -85,6 +88,8 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { role } = useCurrentUser()
+  const showMoney = role !== 'DOCTOR' && role !== 'LAB_TECH'
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -200,7 +205,9 @@ export default function DashboardPage() {
       </div>
 
       {/* AI Insights */}
-      <InsightsPanel />
+      <AiOnly>
+        <InsightsPanel />
+      </AiOnly>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
@@ -236,70 +243,76 @@ export default function DashboardPage() {
               {stats.overview.todayAppointments}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.overview.completedAppointmentsToday} completed,{' '}
-              {stats.overview.pendingAppointments} pending
+              {stats.overview.completedAppointmentsToday} done, {stats.overview.pendingAppointments}{' '}
+              still to see
             </p>
           </CardContent>
         </Card>
 
         {/* This Month Revenue */}
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
-              This Month Revenue
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
-              {formatCurrency(stats.overview.thisMonthRevenue)}
-            </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {trendPill(stats.overview.revenueGrowth)}
-              <span className="text-xs text-muted-foreground">vs last month</span>
-            </div>
-          </CardContent>
-        </Card>
+        {showMoney && (
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+                This Month Revenue
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
+                {formatCurrency(stats.overview.thisMonthRevenue)}
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {trendPill(stats.overview.revenueGrowth)}
+                <span className="text-xs text-muted-foreground">vs last month</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Pending Payments */}
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
-              Pending Payments
-            </CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
-              {formatCurrency(stats.overview.pendingPayments)}
-            </div>
-            <p className="text-xs text-muted-foreground">Outstanding receivables</p>
-          </CardContent>
-        </Card>
+        {showMoney && (
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+                Pending Payments
+              </CardTitle>
+              <Receipt className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+              <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
+                {formatCurrency(stats.overview.pendingPayments)}
+              </div>
+              <p className="text-xs text-muted-foreground">Outstanding receivables</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Charts and Activity */}
       <div className="grid gap-4 lg:grid-cols-7">
         {/* Revenue Chart */}
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Last 7 days revenue trend</CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            {stats.charts.last7DaysRevenue && stats.charts.last7DaysRevenue.length > 0 ? (
-              <RevenueLineChart
-                data={stats.charts.last7DaysRevenue}
-                formatCurrency={formatCurrency}
-              />
-            ) : (
-              <EmptyHint
-                title="No revenue data available"
-                tip="Revenue appears here once invoices are paid."
-              />
-            )}
-          </CardContent>
-        </Card>
+        {showMoney && (
+          <Card className="lg:col-span-4">
+            <CardHeader>
+              <CardTitle>Revenue Overview</CardTitle>
+              <CardDescription>Last 7 days revenue trend</CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              {stats.charts.last7DaysRevenue && stats.charts.last7DaysRevenue.length > 0 ? (
+                <RevenueLineChart
+                  data={stats.charts.last7DaysRevenue}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <EmptyHint
+                  title="No revenue data available"
+                  tip="Revenue appears here once invoices are paid."
+                />
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upcoming Appointments */}
         <Card className="lg:col-span-3">
@@ -348,7 +361,12 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {stats.charts.appointmentsByStatus && stats.charts.appointmentsByStatus.length > 0 ? (
-              <AppointmentStatusPie data={stats.charts.appointmentsByStatus} />
+              <AppointmentStatusPie
+                data={stats.charts.appointmentsByStatus.map((d) => ({
+                  ...d,
+                  status: labelFor(d.status),
+                }))}
+              />
             ) : (
               <EmptyHint
                 title="No appointment data available"
@@ -359,25 +377,27 @@ export default function DashboardPage() {
         </Card>
 
         {/* Monthly Revenue Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Revenue Trend</CardTitle>
-            <CardDescription>Last 6 months revenue comparison</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {stats.charts.last6MonthsRevenue && stats.charts.last6MonthsRevenue.length > 0 ? (
-              <MonthlyRevenueBarChart
-                data={stats.charts.last6MonthsRevenue}
-                formatCurrency={formatCurrency}
-              />
-            ) : (
-              <EmptyHint
-                title="No revenue data available"
-                tip="Revenue appears here once invoices are paid."
-              />
-            )}
-          </CardContent>
-        </Card>
+        {showMoney && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Revenue Trend</CardTitle>
+              <CardDescription>Last 6 months revenue comparison</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {stats.charts.last6MonthsRevenue && stats.charts.last6MonthsRevenue.length > 0 ? (
+                <MonthlyRevenueBarChart
+                  data={stats.charts.last6MonthsRevenue}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <EmptyHint
+                  title="No revenue data available"
+                  tip="Revenue appears here once invoices are paid."
+                />
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Bottom Row */}
@@ -448,55 +468,61 @@ export default function DashboardPage() {
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks you can do right now</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4">
-          <Link
-            href="/patients/new"
-            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Add Patient</p>
-              <p className="text-sm text-muted-foreground">Register new</p>
-            </div>
-          </Link>
-          <Link
-            href="/appointments/new"
-            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Book Appointment</p>
-              <p className="text-sm text-muted-foreground">Schedule visit</p>
-            </div>
-          </Link>
-          <Link
-            href="/billing"
-            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Receipt className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Create Invoice</p>
-              <p className="text-sm text-muted-foreground">Bill patient</p>
-            </div>
-          </Link>
-          <Link
-            href="/reports"
-            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <TrendingUp className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">View Reports</p>
-              <p className="text-sm text-muted-foreground">Analytics</p>
-            </div>
-          </Link>
+        <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {[
+            {
+              href: '/appointments/queue',
+              icon: Calendar,
+              title: "Today's queue",
+              sub: 'Walk-ins and waiting',
+              show: true,
+            },
+            {
+              href: '/patients/new',
+              icon: Users,
+              title: 'Add patient',
+              sub: 'Register new',
+              show: true,
+            },
+            {
+              href: '/appointments/new',
+              icon: Calendar,
+              title: 'Book appointment',
+              sub: 'Schedule visit',
+              show: role !== 'LAB_TECH',
+            },
+            {
+              href: '/billing/invoices/new',
+              icon: Receipt,
+              title: 'New bill',
+              sub: 'Bill a patient',
+              show: can.bill(role),
+            },
+            {
+              href: '/reports',
+              icon: TrendingUp,
+              title: 'Reports',
+              sub: 'Analytics',
+              show: ['ADMIN', 'ACCOUNTANT'].includes(role),
+            },
+          ]
+            .filter((a) => a.show)
+            .slice(0, 4)
+            .map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent md:gap-4 md:p-4"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <a.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{a.title}</p>
+                  <p className="truncate text-sm text-muted-foreground">{a.sub}</p>
+                </div>
+              </Link>
+            ))}
         </CardContent>
       </Card>
     </div>

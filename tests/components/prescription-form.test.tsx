@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
@@ -452,6 +452,61 @@ describe('NewPrescriptionPage', () => {
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/prescriptions/rx1')
       })
+    })
+  })
+
+  describe('Opened from a patient or visit (audit C1, M6)', () => {
+    afterEach(() => {
+      mockSearchParams.delete('patientId')
+      mockSearchParams.delete('appointmentId')
+      mockSearchParams.delete('returnTo')
+    })
+
+    it('pre-fills the patient from GET /api/patients/[id] and saves with their id', async () => {
+      mockSearchParams.set('patientId', 'p9')
+      mockSearchParams.set('appointmentId', 'a9')
+      mockSearchParams.set('returnTo', '/visits/a9')
+      ;(global.fetch as any).mockImplementation((url: string, opts?: any) => {
+        if (url === '/api/patients/p9') {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                success: true,
+                patient: {
+                  id: 'p9',
+                  patientId: 'PAT009',
+                  firstName: 'Priya',
+                  lastName: 'Sundaram',
+                  phone: '9123456780',
+                },
+              }),
+          })
+        }
+        if (opts?.method === 'POST') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ data: { id: 'rx9', prescriptionNo: 'RX009' } }),
+          })
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+      })
+
+      render(<NewPrescriptionPage />)
+      await waitFor(() => expect(screen.getByText(/Priya Sundaram/)).toBeInTheDocument())
+
+      fireEvent.click(screen.getByText('Pain relief'))
+      fireEvent.click(screen.getByText('Create Prescription'))
+
+      await waitFor(() => {
+        const post = (global.fetch as any).mock.calls.find((c: any) => c[1]?.method === 'POST')
+        expect(post).toBeTruthy()
+        const body = JSON.parse(post[1].body)
+        expect(body.patientId).toBe('p9')
+        expect(body.appointmentId).toBe('a9')
+        expect(body.medications[0].medicationName).toContain('Ibuprofen')
+      })
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/visits/a9'))
     })
   })
 

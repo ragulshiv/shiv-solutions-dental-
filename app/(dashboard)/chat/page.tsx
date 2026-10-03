@@ -6,6 +6,9 @@ import { useWebVoice } from '@/hooks/use-web-voice'
 import { VoiceOrb } from '@/components/ai/voice-orb'
 import { AudioWaveform } from '@/components/ai/audio-waveform'
 import { cn } from '@/lib/utils'
+import { useAiEnabled } from '@/components/ai/ai-enabled'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Sparkles as AiOffIcon } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -126,7 +129,7 @@ const SUGGESTIONS = [
 // ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
-export default function ChatPage() {
+function ChatPageInner() {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -648,4 +651,18 @@ export default function ChatPage() {
       </div>
     </div>
   )
+}
+
+export default function ChatPage() {
+  const aiEnabled = useAiEnabled()
+  if (!aiEnabled) {
+    return (
+      <EmptyState
+        icon={AiOffIcon}
+        title="AI Chat is turned off"
+        description="AI features are hidden because no AI key is set up for this clinic. Everything else works as normal."
+      />
+    )
+  }
+  return <ChatPageInner />
 }

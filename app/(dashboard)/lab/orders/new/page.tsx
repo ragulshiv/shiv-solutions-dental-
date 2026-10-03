@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PatientPicker } from '@/components/patients/patient-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -56,10 +57,8 @@ export default function NewLabOrderPage() {
   const preselectedPatientId = searchParams.get('patientId')
   const { toast } = useToast()
 
-  const [patients, setPatients] = useState<Patient[]>([])
   const [vendors, setVendors] = useState<LabVendor[]>([])
   const [submitting, setSubmitting] = useState(false)
-  const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   const [form, setForm] = useState({
@@ -78,21 +77,7 @@ export default function NewLabOrderPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [patientsRes, vendorsRes] = await Promise.all([
-          fetch('/api/patients?limit=100'),
-          fetch('/api/lab-vendors?status=active'),
-        ])
-
-        if (patientsRes.ok) {
-          const data = await patientsRes.json()
-          setPatients(data.patients || [])
-          if (preselectedPatientId) {
-            const patient = (data.patients || []).find(
-              (p: Patient) => p.id === preselectedPatientId
-            )
-            if (patient) setSelectedPatient(patient)
-          }
-        }
+        const vendorsRes = await fetch('/api/lab-vendors?status=active')
 
         if (vendorsRes.ok) {
           const data = await vendorsRes.json()
@@ -104,23 +89,7 @@ export default function NewLabOrderPage() {
     }
 
     fetchData()
-  }, [preselectedPatientId])
-
-  const filteredPatients = patients.filter((patient) => {
-    const s = patientSearch.toLowerCase()
-    return (
-      patient.firstName.toLowerCase().includes(s) ||
-      patient.lastName.toLowerCase().includes(s) ||
-      patient.phone.includes(patientSearch) ||
-      patient.patientId.toLowerCase().includes(s)
-    )
-  })
-
-  const handlePatientSelect = (patientId: string) => {
-    const patient = patients.find((p) => p.id === patientId)
-    setSelectedPatient(patient || null)
-    setForm((prev) => ({ ...prev, patientId }))
-  }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -217,71 +186,14 @@ export default function NewLabOrderPage() {
             <CardDescription>Select the patient for this lab order</CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedPatient ? (
-              <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {selectedPatient.firstName} {selectedPatient.lastName}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedPatient.patientId} | {selectedPatient.phone}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedPatient(null)
-                    setForm((prev) => ({ ...prev, patientId: '' }))
-                  }}
-                >
-                  Change
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search patients by name, phone, or ID..."
-                    value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <div className="max-h-60 overflow-y-auto border rounded-lg">
-                  {filteredPatients.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">No patients found</div>
-                  ) : (
-                    filteredPatients.slice(0, 10).map((patient) => (
-                      <button
-                        key={patient.id}
-                        type="button"
-                        onClick={() => handlePatientSelect(patient.id)}
-                        className="w-full flex items-center gap-4 p-3 hover:bg-muted/50 border-b last:border-b-0 text-left"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {patient.firstName} {patient.lastName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {patient.patientId} | {patient.phone}
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            <PatientPicker
+              value={selectedPatient}
+              initialPatientId={preselectedPatientId}
+              onChange={(p) => {
+                setSelectedPatient(p as Patient | null)
+                setForm((prev) => ({ ...prev, patientId: p?.id || '' }))
+              }}
+            />
           </CardContent>
         </Card>
 

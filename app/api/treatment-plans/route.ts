@@ -164,7 +164,8 @@ export async function POST(request: NextRequest) {
 
     // Validate procedures exist and belong to this hospital
     if (items.length > 0) {
-      const procedureIds = items.map((item: any) => item.procedureId)
+      // The same procedure can appear more than once (e.g. fillings on 16 and 26)
+      const procedureIds = [...new Set<string>(items.map((item: any) => item.procedureId))]
       const procedures = await prisma.procedure.findMany({
         where: {
           id: { in: procedureIds },

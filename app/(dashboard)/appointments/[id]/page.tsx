@@ -46,6 +46,7 @@ import {
   getPatientName,
   getDoctorName,
 } from '@/lib/appointment-utils'
+import { useCurrentUser, can } from '@/components/layout/current-user'
 
 interface Appointment {
   id: string
@@ -112,6 +113,7 @@ interface Appointment {
 }
 
 export default function AppointmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { role } = useCurrentUser()
   const { id } = use(params)
   const router = useRouter()
   const [appointment, setAppointment] = useState<Appointment | null>(null)
@@ -297,7 +299,7 @@ export default function AppointmentDetailsPage({ params }: { params: Promise<{ i
             <p className="text-muted-foreground">Created on {formatDate(appointment.createdAt)}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {appointment.isVirtual &&
             appointment.videoConsultationId &&
             ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'].includes(appointment.status) && (
@@ -308,8 +310,30 @@ export default function AppointmentDetailsPage({ params }: { params: Promise<{ i
                 </Button>
               </Link>
             )}
+          {can.treat(role) && !['CANCELLED', 'NO_SHOW'].includes(appointment.status) && (
+            <Link
+              href={
+                appointment.status === 'COMPLETED'
+                  ? `/visits/${appointment.id}`
+                  : `/visits/new?appointmentId=${appointment.id}`
+              }
+            >
+              <Button>
+                <Stethoscope className="h-4 w-4 mr-2" />
+                {appointment.status === 'COMPLETED'
+                  ? 'View visit notes'
+                  : appointment.status === 'IN_PROGRESS'
+                    ? 'Open visit'
+                    : 'Start visit'}
+              </Button>
+            </Link>
+          )}
           {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
-            <Button onClick={handleCheckIn} disabled={actionLoading}>
+            <Button
+              variant={can.treat(role) ? 'outline' : 'default'}
+              onClick={handleCheckIn}
+              disabled={actionLoading}
+            >
               <LogIn className="h-4 w-4 mr-2" />
               Check In
             </Button>
@@ -328,6 +352,15 @@ export default function AppointmentDetailsPage({ params }: { params: Promise<{ i
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Confirm
+            </Button>
+          )}
+          {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
+            <Button
+              variant="outline"
+              onClick={() => handleStatusChange('NO_SHOW')}
+              disabled={actionLoading}
+            >
+              No-show
             </Button>
           )}
           <Link href={`/appointments/${id}/edit`}>

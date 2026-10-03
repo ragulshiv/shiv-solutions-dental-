@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -83,6 +83,7 @@ export default function NewInvoicePage() {
   const preSelectedPatientId = searchParams.get('patientId')
 
   const [loading, setLoading] = useState(false)
+  const autoAddUnbilled = useRef(!!preSelectedPatientId)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -124,7 +125,9 @@ export default function NewInvoicePage() {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const response = await fetch(`/api/patients?search=${patientSearch}&limit=10`)
+        const response = await fetch(
+          `/api/patients?search=${encodeURIComponent(patientSearch)}&limit=10`
+        )
         if (!response.ok) throw new Error('Failed to fetch patients')
         const data = await response.json()
         setPatients(data.patients)
@@ -148,12 +151,10 @@ export default function NewInvoicePage() {
       const fetchPatient = async () => {
         try {
           setLoading(true)
-          const response = await fetch(`/api/patients?search=${preSelectedPatientId}`)
+          const response = await fetch(`/api/patients/${preSelectedPatientId}`)
           if (!response.ok) throw new Error('Failed to fetch patient')
           const data = await response.json()
-          if (data.patients.length > 0) {
-            setSelectedPatient(data.patients[0])
-          }
+          if (data.patient?.id) setSelectedPatient(data.patient)
         } catch (error) {
           console.error('Error fetching patient:', error)
         } finally {
@@ -180,6 +181,20 @@ export default function NewInvoicePage() {
       if (!response.ok) throw new Error('Failed to fetch unbilled treatments')
       const data = await response.json()
       setUnbilledTreatments(data.treatments)
+      // Opened from a patient / finished visit: start with all unbilled work on the bill
+      if (autoAddUnbilled.current && patientId === preSelectedPatientId) {
+        autoAddUnbilled.current = false
+        setItems(
+          (data.treatments || []).map((t: UnbilledTreatment, i: number) => ({
+            id: `item-${Date.now()}-${i}`,
+            treatmentId: t.treatmentId,
+            description: t.description,
+            quantity: t.quantity,
+            unitPrice: t.unitPrice,
+            taxable: t.taxable,
+          }))
+        )
+      }
     } catch (error) {
       console.error('Error fetching unbilled treatments:', error)
     } finally {
@@ -339,10 +354,10 @@ export default function NewInvoicePage() {
             </CardHeader>
             <CardContent>
               {selectedPatient ? (
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/10 p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                      <User className="h-5 w-5 text-green-600" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+                      <User className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <div className="font-medium">

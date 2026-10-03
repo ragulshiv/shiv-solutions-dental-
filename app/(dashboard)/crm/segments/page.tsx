@@ -26,6 +26,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 interface PatientInfo {
   id: string
@@ -168,14 +169,16 @@ export default function SegmentsPage() {
             {data?.totalPatients || 0} total active patients
           </p>
         </div>
-        <Button variant="outline" onClick={fetchAiSegments} disabled={aiLoading}>
-          {aiLoading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Brain className="h-4 w-4 mr-2" />
-          )}
-          AI Churn Analysis
-        </Button>
+        <AiOnly>
+          <Button variant="outline" onClick={fetchAiSegments} disabled={aiLoading}>
+            {aiLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4 mr-2" />
+            )}
+            AI Churn Analysis
+          </Button>
+        </AiOnly>
       </div>
 
       {/* Segment Summary Cards */}

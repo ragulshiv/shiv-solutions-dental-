@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { syncPlanForTreatment } from '@/lib/plan-sync'
 
 // GET - Get single treatment with all details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -113,15 +114,31 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Treatment not found' }, { status: 404 })
     }
 
-    // Prevent updates to completed or cancelled treatments (except by admin)
+    // Finished treatments: doctors may still correct notes, but not the
+    // price, teeth or status (admins can change anything)
+    const finished =
+      existingTreatment.status === 'COMPLETED' || existingTreatment.status === 'CANCELLED'
     if (
-      (existingTreatment.status === 'COMPLETED' || existingTreatment.status === 'CANCELLED') &&
-      session.user.role !== 'ADMIN'
+      finished &&
+      session.user.role !== 'ADMIN' &&
+      ['cost', 'toothNumbers', 'status'].some((k) => body[k] !== undefined)
     ) {
       return NextResponse.json(
-        { error: 'Cannot modify completed or cancelled treatments' },
+        { error: 'Only notes can be changed on a completed treatment' },
         { status: 400 }
       )
+    }
+    if (body.cost !== undefined) {
+      const billed = await prisma.invoiceItem.findFirst({
+        where: { treatmentId: id, invoice: { status: { not: 'CANCELLED' } } },
+        select: { id: true },
+      })
+      if (billed && Number(body.cost) !== Number(existingTreatment.cost)) {
+        return NextResponse.json(
+          { error: 'This treatment is already billed. Change the price on the invoice instead.' },
+          { status: 400 }
+        )
+      }
     }
 
     const updateData: any = {}
@@ -183,6 +200,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         },
       },
     })
+
+    if (body.status !== undefined) {
+      await syncPlanForTreatment(id).catch((e) => console.error('Plan sync failed:', e))
+    }
 
     return NextResponse.json(treatment)
   } catch (error) {

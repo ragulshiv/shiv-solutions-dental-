@@ -53,6 +53,18 @@ if (error || !hospitalId)
 
 **Money / GST:** use `lib/billing-utils.ts`; don't recompute tax inline.
 
+**Patients:** validate with `validatePatientInput()` from `lib/patient-utils.ts` (phone, email, DOB→age, blank clears a field). Show age with `patientAge()` (live from DOB). Last name is optional and a mobile may be shared by family members. Medical alerts: `medicalAlerts()`. Pick patients with `components/patients/patient-picker.tsx` (server search + quick add); never load a capped patient list into a dropdown.
+
+**Visit flow:** a visit is an appointment. `/visits/new?patientId=|appointmentId=` starts it (walk-in or check-in) and `/visits/[id]` is the doctor's one-page screen (complaint, chart, treatment done today, Rx, next visit, finish → bill). Treatments made from a plan item pass `planItemId`; `lib/plan-sync.ts` keeps plan progress in step.
+
+**Appointments:** booking/rescheduling checks go through `lib/appointment-rules.ts` (overlap by duration, clinic hours, allowed status changes, `todayDateOnly()`).
+
+**Roles on screen:** `useCurrentUser()` + `can.treat/bill/book` from `components/layout/current-user.tsx`; keep `middleware.ts` `roleRoutes` and `config/nav.ts` in step with the API guards. Staff pay/ID fields go through `redactStaff()` (`lib/staff-privacy.ts`).
+
+**AI:** features show only when `OPENROUTER_API_KEY` is set. Wrap AI buttons/panels in `<AiOnly>` (`components/ai/ai-enabled.tsx`).
+
+**Labels:** show database codes with `labelFor()` from `lib/labels.ts` (A_POSITIVE → A+), never raw.
+
 ## Design system: mobile-first SaaS (Linear/Stripe style)
 
 - **Mobile first.** Write the phone layout first, then scale up with `md:` / `lg:`. Phones get a bottom tab bar (`components/layout/bottom-nav.tsx`: Dashboard, Patients, Appointments, Billing + More), and More opens the slate-900 drawer. The desktop sidebar starts at `md:`. The main area has `pb-24` on phones so the tab bar never covers content.
@@ -71,7 +83,7 @@ if (error || !hospitalId)
 3. API: `app/api/<module>/route.ts` with the guard above.
 4. Screen: `app/(dashboard)/<module>/…/page.tsx`. Add to `config/nav.ts` if it needs a menu entry.
 5. Tests: add `tests/api/<module>.test.ts` (mock prisma like the neighbours).
-6. Verify: `npx tsc --noEmit` · `npm test` (all must pass; baseline 4,356 tests) · check in the browser preview.
+6. Verify: `npx tsc --noEmit` · `npm test` (all must pass; baseline 4,389 tests) · check in the browser preview.
 7. Commit on the branch and push it (`git push -u origin feature/<name>`). A pre-push hook runs the full test suite before every push.
 8. **When the owner says OK**, Claude merges it: `git switch main && git pull`, `git merge --no-ff feature/<name>`, then `ALLOW_PROTECTED_PUSH=1 git push origin main` (the hook blocks plain pushes to `main` as a guard; the tests still run). Then run `clinic-start.cmd` to rebuild the live clinic app and check it over Tailscale. Never merge or deploy without that OK.
 

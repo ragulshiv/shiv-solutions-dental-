@@ -79,13 +79,14 @@ export async function GET(req: NextRequest) {
           },
         }),
 
-        // Pending appointments (upcoming)
+        // Still to be seen today (shown under "Today's appointments")
         prisma.appointment.count({
           where: {
             hospitalId,
-            status: { in: ['SCHEDULED', 'CONFIRMED'] },
+            status: { in: ['SCHEDULED', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'] },
             scheduledDate: {
-              gte: now,
+              gte: todayStart,
+              lte: todayEnd,
             },
           },
         }),
@@ -236,7 +237,8 @@ export async function GET(req: NextRequest) {
             },
           },
           orderBy: [{ scheduledDate: 'asc' }, { scheduledTime: 'asc' }],
-          take: 5,
+          // Fetch a few extra so slots that already passed today can be dropped below
+          take: 15,
         }),
 
         // Low stock items (using raw query to compare fields)
@@ -371,17 +373,25 @@ export async function GET(req: NextRequest) {
         topProcedures,
       },
       recentActivity: {
-        upcomingAppointments: recentAppointments.map((apt: any) => ({
-          id: apt.id,
-          patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
-          doctorName: apt.doctor
-            ? `${apt.doctor.firstName} ${apt.doctor.lastName}`
-            : 'Not assigned',
-          date: apt.scheduledDate,
-          time: apt.scheduledTime,
-          type: apt.appointmentType,
-          status: apt.status,
-        })),
+        upcomingAppointments: recentAppointments
+          .filter((apt: any) => {
+            // Hide today's bookings whose time has already gone by
+            if (!apt.scheduledTime || new Date(apt.scheduledDate) > todayEnd) return true
+            const nowHHmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+            return apt.scheduledTime >= nowHHmm
+          })
+          .slice(0, 5)
+          .map((apt: any) => ({
+            id: apt.id,
+            patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
+            doctorName: apt.doctor
+              ? `${apt.doctor.firstName} ${apt.doctor.lastName}`
+              : 'Not assigned',
+            date: apt.scheduledDate,
+            time: apt.scheduledTime,
+            type: apt.appointmentType,
+            status: apt.status,
+          })),
         lowStockItems,
       },
     }

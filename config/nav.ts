@@ -83,6 +83,11 @@ export const navigation: NavSection[] = [
         icon: Calendar,
         subItems: [
           {
+            title: "Today's Queue",
+            href: '/appointments/queue',
+            icon: ClipboardCheck,
+          },
+          {
             title: 'All Appointments',
             href: '/appointments',
             icon: Calendar,
@@ -128,7 +133,7 @@ export const navigation: NavSection[] = [
         title: 'Billing',
         href: '/billing',
         icon: Receipt,
-        roles: ['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'],
+        roles: ['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST', 'DOCTOR'],
         subItems: [
           {
             title: 'Overview',
@@ -398,18 +403,20 @@ export const navigation: NavSection[] = [
   },
 ]
 
-export function getNavigationForRole(role: string): NavSection[] {
+/**
+ * Menu for a role. `hiddenPaths` removes items (and sub-items) by href,
+ * e.g. the AI-only screens when no AI key is configured.
+ */
+export function getNavigationForRole(role: string, hiddenPaths: string[] = []): NavSection[] {
+  const visible = (item: NavItem) =>
+    (!item.roles || item.roles.includes(role)) && !hiddenPaths.includes(item.href)
   return navigation
     .map((section) => ({
       ...section,
-      items: section.items
-        .filter((item) => !item.roles || item.roles.includes(role))
-        .map((item) => ({
-          ...item,
-          subItems: item.subItems?.filter(
-            (subItem) => !subItem.roles || subItem.roles.includes(role)
-          ),
-        })),
+      items: section.items.filter(visible).map((item) => ({
+        ...item,
+        subItems: item.subItems?.filter(visible),
+      })),
     }))
     .filter((section) => section.items.length > 0)
 }

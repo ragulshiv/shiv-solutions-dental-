@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PatientPicker } from '@/components/patients/patient-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -21,6 +22,8 @@ import { DentalChart } from '@/components/treatments/dental-chart'
 import { procedureCategoryConfig, formatCurrency } from '@/lib/treatment-utils'
 import { TreatmentAssist } from '@/components/ai/treatment-assist'
 import { VoiceInput } from '@/components/clinical/voice-input'
+import { AiOnly } from '@/components/ai/ai-enabled'
+import { ProcedurePicker } from '@/components/treatments/procedure-picker'
 
 interface Patient {
   id: string
@@ -29,6 +32,7 @@ interface Patient {
   lastName: string
   phone: string
   email: string | null
+  age?: number | null
 }
 
 interface Doctor {
@@ -53,21 +57,27 @@ export default function NewTreatmentPage() {
   const searchParams = useSearchParams()
   const preselectedPatientId = searchParams.get('patientId')
   const preselectedAppointmentId = searchParams.get('appointmentId')
+  // Coming from a treatment plan's "Do today"
+  const preselectedProcedureId = searchParams.get('procedureId')
+  const planItemId = searchParams.get('planItemId')
+  const preselectedTeeth = (searchParams.get('teeth') || '')
+    .split(/[,\s]+/)
+    .map((t) => parseInt(t, 10))
+    .filter((n) => !isNaN(n))
+  const preselectedCost = searchParams.get('cost')
 
-  const [patients, setPatients] = useState<Patient[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [patientSearch, setPatientSearch] = useState('')
 
   // Form state
   const [formData, setFormData] = useState({
     patientId: preselectedPatientId || '',
     doctorId: '',
-    procedureId: '',
+    procedureId: preselectedProcedureId || '',
     appointmentId: preselectedAppointmentId || '',
-    toothNumbers: [] as number[],
+    toothNumbers: preselectedTeeth as number[],
     chiefComplaint: '',
     diagnosis: '',
     findings: '',
@@ -75,7 +85,7 @@ export default function NewTreatmentPage() {
     materialsUsed: '',
     followUpRequired: false,
     followUpDate: '',
-    cost: '',
+    cost: preselectedCost || '',
   })
 
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
@@ -85,21 +95,10 @@ export default function NewTreatmentPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [patientsRes, doctorsRes, proceduresRes] = await Promise.all([
-          fetch('/api/patients?limit=100'),
+        const [doctorsRes, proceduresRes] = await Promise.all([
           fetch('/api/staff/doctors'),
           fetch('/api/procedures?all=true&isActive=true'),
         ])
-
-        if (patientsRes.ok) {
-          const data = await patientsRes.json()
-          setPatients(data.patients)
-          // Set preselected patient if available
-          if (preselectedPatientId) {
-            const patient = data.patients.find((p: Patient) => p.id === preselectedPatientId)
-            if (patient) setSelectedPatient(patient)
-          }
-        }
 
         if (doctorsRes.ok) {
           const data = await doctorsRes.json()
@@ -109,6 +108,13 @@ export default function NewTreatmentPage() {
         if (proceduresRes.ok) {
           const data = await proceduresRes.json()
           setProcedures(data.procedures)
+          if (preselectedProcedureId) {
+            const proc = data.procedures?.find((p: Procedure) => p.id === preselectedProcedureId)
+            if (proc) {
+              setSelectedProcedure(proc)
+              setFormData((f) => ({ ...f, cost: f.cost || String(proc.basePrice) }))
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -116,18 +122,7 @@ export default function NewTreatmentPage() {
     }
 
     fetchData()
-  }, [preselectedPatientId])
-
-  // Filter patients by search
-  const filteredPatients = patients.filter((patient) => {
-    const searchLower = patientSearch.toLowerCase()
-    return (
-      patient.firstName.toLowerCase().includes(searchLower) ||
-      patient.lastName.toLowerCase().includes(searchLower) ||
-      patient.phone.includes(patientSearch) ||
-      patient.patientId.toLowerCase().includes(searchLower)
-    )
-  })
+  }, [])
 
   // Group procedures by category
   const groupedProcedures = procedures.reduce(
@@ -140,12 +135,6 @@ export default function NewTreatmentPage() {
     },
     {} as Record<string, Procedure[]>
   )
-
-  const handlePatientSelect = (patientId: string) => {
-    const patient = patients.find((p) => p.id === patientId)
-    setSelectedPatient(patient || null)
-    setFormData({ ...formData, patientId })
-  }
 
   const handleProcedureSelect = (procedureId: string) => {
     const procedure = procedures.find((p) => p.id === procedureId)
@@ -183,6 +172,7 @@ export default function NewTreatmentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          planItemId: planItemId || undefined,
           toothNumbers: formData.toothNumbers.length > 0 ? formData.toothNumbers.join(',') : null,
           cost: formData.cost ? parseFloat(formData.cost) : null,
         }),
@@ -235,71 +225,14 @@ export default function NewTreatmentPage() {
             <CardDescription>Select the patient for this treatment</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {selectedPatient ? (
-              <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {selectedPatient.firstName} {selectedPatient.lastName}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {selectedPatient.patientId} | {selectedPatient.phone}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedPatient(null)
-                    setFormData({ ...formData, patientId: '' })
-                  }}
-                >
-                  Change
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search patients by name, phone, or ID..."
-                    value={patientSearch}
-                    onChange={(e) => setPatientSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <div className="max-h-60 overflow-y-auto border rounded-lg">
-                  {filteredPatients.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">No patients found</div>
-                  ) : (
-                    filteredPatients.slice(0, 10).map((patient) => (
-                      <button
-                        key={patient.id}
-                        type="button"
-                        onClick={() => handlePatientSelect(patient.id)}
-                        className="w-full flex items-center gap-4 p-3 hover:bg-muted/50 border-b last:border-b-0 text-left"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {patient.firstName} {patient.lastName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {patient.patientId} | {patient.phone}
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            <PatientPicker
+              value={selectedPatient}
+              initialPatientId={preselectedPatientId}
+              onChange={(p) => {
+                setSelectedPatient(p as Patient | null)
+                setFormData((f) => ({ ...f, patientId: p?.id || '' }))
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -336,25 +269,11 @@ export default function NewTreatmentPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="procedure">Procedure *</Label>
-                <Select value={formData.procedureId} onValueChange={handleProcedureSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select procedure" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(groupedProcedures).map(([category, procs]) => (
-                      <div key={category}>
-                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                          {procedureCategoryConfig[category]?.label || category}
-                        </div>
-                        {procs.map((proc) => (
-                          <SelectItem key={proc.id} value={proc.id}>
-                            {proc.code} - {proc.name} ({formatCurrency(proc.basePrice)})
-                          </SelectItem>
-                        ))}
-                      </div>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ProcedurePicker
+                  procedures={procedures as any}
+                  value={formData.procedureId}
+                  onChange={(p) => handleProcedureSelect(p?.id || '')}
+                />
               </div>
             </div>
 
@@ -392,6 +311,7 @@ export default function NewTreatmentPage() {
           <DentalChart
             patientId={selectedPatient.id}
             selectedTeeth={formData.toothNumbers}
+            patientAge={selectedPatient?.age ?? null}
             onTeethSelect={(teeth) => setFormData({ ...formData, toothNumbers: teeth })}
           />
         )}
@@ -472,14 +392,16 @@ export default function NewTreatmentPage() {
 
         {/* AI Treatment Assistant */}
         {formData.patientId && formData.procedureId && (
-          <TreatmentAssist
-            patientId={formData.patientId}
-            procedureId={formData.procedureId}
-            procedureName={procedures.find((p) => p.id === formData.procedureId)?.name}
-            diagnosis={formData.diagnosis}
-            findings={formData.findings}
-            procedureNotes={formData.procedureNotes}
-          />
+          <AiOnly>
+            <TreatmentAssist
+              patientId={formData.patientId}
+              procedureId={formData.procedureId}
+              procedureName={procedures.find((p) => p.id === formData.procedureId)?.name}
+              diagnosis={formData.diagnosis}
+              findings={formData.findings}
+              procedureNotes={formData.procedureNotes}
+            />
+          </AiOnly>
         )}
 
         {/* Follow-up */}

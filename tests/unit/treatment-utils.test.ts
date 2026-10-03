@@ -90,8 +90,13 @@ describe('toothNumbers', () => {
 })
 
 describe('toothNames', () => {
-  it('maps all 32 teeth', () => {
-    expect(Object.keys(toothNames)).toHaveLength(32)
+  it('maps all 32 adult teeth and 20 milk teeth', () => {
+    expect(Object.keys(toothNames)).toHaveLength(52)
+  })
+
+  it('names milk teeth', () => {
+    expect(toothNames[51]).toBe('Upper Right Primary Central Incisor')
+    expect(toothNames[85]).toBe('Lower Right Primary Second Molar')
   })
 
   it('returns correct name for tooth 11', () => {

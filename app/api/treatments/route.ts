@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { syncPlanForTreatment } from '@/lib/plan-sync'
 
 // Generate unique treatment number
 async function generateTreatmentNo(hospitalId: string): Promise<string> {
@@ -188,7 +189,14 @@ export async function POST(request: NextRequest) {
       followUpRequired = false,
       followUpDate,
       cost,
+      planItemId,
+      status: requestedStatus,
     } = body
+
+    // "Done today" from the visit screen records a finished treatment in one step
+    const status = ['PLANNED', 'IN_PROGRESS', 'COMPLETED'].includes(requestedStatus)
+      ? requestedStatus
+      : 'PLANNED'
 
     // Validate required fields
     if (!patientId || !procedureId || !doctorId) {
@@ -232,6 +240,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Plan item being carried out (from a treatment plan's "Do today")
+    if (planItemId) {
+      const planItem = await prisma.treatmentPlanItem.findFirst({
+        where: { id: planItemId, treatmentPlan: { hospitalId, patientId } },
+        select: { treatmentId: true },
+      })
+      if (!planItem) {
+        return NextResponse.json({ error: 'Treatment plan item not found' }, { status: 404 })
+      }
+      if (planItem.treatmentId) {
+        return NextResponse.json(
+          { error: 'This plan item already has a treatment' },
+          { status: 409 }
+        )
+      }
+    }
+
     // Generate treatment number
     const treatmentNo = await generateTreatmentNo(hospitalId)
 
@@ -254,7 +279,10 @@ export async function POST(request: NextRequest) {
         followUpRequired,
         followUpDate: followUpDate ? new Date(followUpDate) : null,
         cost: cost || procedure.basePrice,
-        status: 'PLANNED',
+        status,
+        ...(status !== 'PLANNED' ? { startTime: new Date() } : {}),
+        ...(status === 'COMPLETED' ? { endTime: new Date() } : {}),
+        ...(planItemId ? { planItem: { connect: { id: planItemId } } } : {}),
       },
       include: {
         patient: {
@@ -282,6 +310,10 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    if (planItemId) {
+      await syncPlanForTreatment(treatment.id).catch((e) => console.error('Plan sync failed:', e))
+    }
 
     return NextResponse.json(treatment, { status: 201 })
   } catch (error) {

@@ -1,16 +1,28 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
-// Routes that require specific roles
+// Routes that require specific roles. Every matching prefix must allow the
+// role, so a more specific entry (e.g. /billing/reports) narrows its parent.
+// Keep in step with the menu in config/nav.ts.
 const roleRoutes: Record<string, string[]> = {
   '/settings': ['ADMIN'],
   '/staff': ['ADMIN'],
   '/inventory': ['ADMIN'],
-  '/billing': ['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'],
+  '/devices': ['ADMIN'],
+  '/billing': ['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST', 'DOCTOR'],
+  '/billing/reports': ['ADMIN', 'ACCOUNTANT'],
+  '/billing/insurance': ['ADMIN', 'ACCOUNTANT'],
   '/lab': ['ADMIN', 'DOCTOR', 'LAB_TECH'],
   '/treatments': ['ADMIN', 'DOCTOR'],
+  '/visits': ['ADMIN', 'DOCTOR'],
+  '/prescriptions': ['ADMIN', 'DOCTOR'],
+  '/medications': ['ADMIN', 'DOCTOR'],
+  '/sterilization': ['ADMIN', 'DOCTOR'],
   '/reports': ['ADMIN', 'ACCOUNTANT', 'DOCTOR'],
+  '/reports/audit-log': ['ADMIN'],
   '/communications': ['ADMIN', 'RECEPTIONIST'],
+  '/crm': ['ADMIN', 'RECEPTIONIST'],
+  '/crm/segments': ['ADMIN'],
 }
 
 // Public routes that don't require authentication.

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PatientPicker } from '@/components/patients/patient-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -52,13 +53,11 @@ export default function NewAppointmentPage() {
   const [error, setError] = useState('')
 
   // Data
-  const [patients, setPatients] = useState<Patient[]>([])
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
 
   // Form state
-  const [patientSearch, setPatientSearch] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [selectedDoctor, setSelectedDoctor] = useState('')
   const [selectedDate, setSelectedDate] = useState('')
@@ -76,23 +75,7 @@ export default function NewAppointmentPage() {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [patientsRes, doctorsRes] = await Promise.all([
-          fetch('/api/patients?all=true'),
-          fetch('/api/staff/doctors'),
-        ])
-
-        if (patientsRes.ok) {
-          const data = await patientsRes.json()
-          setPatients(data.patients)
-
-          // If preselected patient
-          if (preselectedPatientId) {
-            const patient = data.patients.find((p: Patient) => p.id === preselectedPatientId)
-            if (patient) {
-              setSelectedPatient(patient)
-            }
-          }
-        }
+        const doctorsRes = await fetch('/api/staff/doctors')
 
         if (doctorsRes.ok) {
           const data = await doctorsRes.json()
@@ -106,7 +89,7 @@ export default function NewAppointmentPage() {
     }
 
     fetchData()
-  }, [preselectedPatientId])
+  }, [])
 
   // Fetch available time slots when doctor and date are selected
   useEffect(() => {
@@ -140,15 +123,6 @@ export default function NewAppointmentPage() {
 
     fetchSlots()
   }, [selectedDoctor, selectedDate, duration])
-
-  // Filter patients based on search
-  const filteredPatients = patients.filter(
-    (p) =>
-      p.firstName.toLowerCase().includes(patientSearch.toLowerCase()) ||
-      p.lastName.toLowerCase().includes(patientSearch.toLowerCase()) ||
-      p.phone.includes(patientSearch) ||
-      p.patientId.toLowerCase().includes(patientSearch.toLowerCase())
-  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -257,71 +231,11 @@ export default function NewAppointmentPage() {
               <CardDescription>Select the patient for this appointment</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedPatient ? (
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">
-                        {selectedPatient.firstName} {selectedPatient.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{selectedPatient.patientId}</p>
-                      <p className="text-sm text-muted-foreground">{selectedPatient.phone}</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedPatient(null)}
-                    >
-                      Change
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search patient by name, phone, or ID..."
-                      value={patientSearch}
-                      onChange={(e) => setPatientSearch(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                  <div className="max-h-48 overflow-y-auto rounded-lg border">
-                    {filteredPatients.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">
-                        <p>No patients found</p>
-                        <Link href="/patients/new">
-                          <Button variant="link" size="sm">
-                            Add New Patient
-                          </Button>
-                        </Link>
-                      </div>
-                    ) : (
-                      filteredPatients.slice(0, 5).map((patient) => (
-                        <div
-                          key={patient.id}
-                          className="flex cursor-pointer items-center justify-between border-b p-3 last:border-0 hover:bg-muted/50"
-                          onClick={() => {
-                            setSelectedPatient(patient)
-                            setPatientSearch('')
-                          }}
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {patient.firstName} {patient.lastName}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {patient.patientId} | {patient.phone}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </>
-              )}
+              <PatientPicker
+                value={selectedPatient}
+                onChange={(p) => setSelectedPatient(p as Patient | null)}
+                initialPatientId={preselectedPatientId}
+              />
             </CardContent>
           </Card>
 

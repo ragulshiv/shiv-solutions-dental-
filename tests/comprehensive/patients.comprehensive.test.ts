@@ -271,20 +271,22 @@ describe('Patients API - Comprehensive Tests', () => {
     it('should reject creation without required fields', async () => {
       const request = new NextRequest('http://localhost/api/patients', {
         method: 'POST',
-        body: JSON.stringify({ firstName: 'John' }), // Missing lastName and phone
+        body: JSON.stringify({ firstName: 'John' }), // Missing phone (last name is optional)
       })
       const response = await POST(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
-      expect(data.error).toBe('First name, last name, and phone are required')
+      expect(data.error).toBe('Mobile number is required')
+      expect(data.errors.phone).toBeDefined()
     })
 
-    it('should reject duplicate phone numbers within the same hospital', async () => {
+    it('should allow a shared family phone number within the same hospital', async () => {
       mockPrisma.patient.findFirst.mockResolvedValue({
         id: 'existing-patient',
         phone: '9876543210',
       })
+      mockPrisma.patient.create.mockResolvedValue({ id: '2' })
 
       const request = new NextRequest('http://localhost/api/patients', {
         method: 'POST',
@@ -296,9 +298,7 @@ describe('Patients API - Comprehensive Tests', () => {
       })
       const response = await POST(request)
 
-      expect(response.status).toBe(409)
-      const data = await response.json()
-      expect(data.error).toBe('A patient with this phone number already exists')
+      expect(response.status).toBe(201)
     })
 
     it('should enforce patient limit for the hospital plan', async () => {
@@ -356,10 +356,7 @@ describe('Patients API - Comprehensive Tests', () => {
       mockPrisma.patient.create.mockResolvedValue({
         id: '1',
         patientId: 'PAT202500001',
-        medicalHistory: {
-          allergies: 'Penicillin',
-          conditions: 'Diabetes',
-        },
+        medicalHistory: { hasAllergies: true, drugAllergies: 'Penicillin', hasDiabetes: true },
       })
 
       const request = new NextRequest('http://localhost/api/patients', {
@@ -369,8 +366,10 @@ describe('Patients API - Comprehensive Tests', () => {
           lastName: 'Doe',
           phone: '9876543210',
           medicalHistory: {
-            allergies: 'Penicillin',
-            conditions: 'Diabetes',
+            hasAllergies: true,
+            drugAllergies: 'Penicillin',
+            hasDiabetes: true,
+            unknownField: 'ignored',
           },
         }),
       })
@@ -381,10 +380,7 @@ describe('Patients API - Comprehensive Tests', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             medicalHistory: {
-              create: {
-                allergies: 'Penicillin',
-                conditions: 'Diabetes',
-              },
+              create: { hasAllergies: true, drugAllergies: 'Penicillin', hasDiabetes: true },
             },
           }),
         })
@@ -532,10 +528,10 @@ describe('Patients API - Comprehensive Tests', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(201)
-      // Duplicate check should include hospitalId
-      expect(mockPrisma.patient.findFirst).toHaveBeenCalledWith(
+      // The new patient belongs to the logged-in clinic
+      expect(mockPrisma.patient.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { hospitalId: 'hospital-A', phone: '9876543210' },
+          data: expect.objectContaining({ hospitalId: 'hospital-A', phone: '9876543210' }),
         })
       )
     })

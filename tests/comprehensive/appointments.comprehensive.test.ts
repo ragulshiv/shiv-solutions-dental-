@@ -257,6 +257,8 @@ describe('Appointments API - Comprehensive Tests', () => {
 
   describe('POST /api/appointments', () => {
     beforeEach(() => {
+      // No other bookings that day unless a test says so
+      mockPrisma.appointment.findMany.mockResolvedValue([])
       mockPrisma.patient.findFirst.mockResolvedValue({
         id: mockPatientId,
         hospitalId: mockHospitalId,
@@ -352,14 +354,10 @@ describe('Appointments API - Comprehensive Tests', () => {
     })
 
     it('should detect and reject conflicting appointments', async () => {
-      // Doctor already has appointment at this time
-      mockPrisma.appointment.findFirst.mockResolvedValue({
-        id: 'existing-apt',
-        doctorId: mockDoctorId,
-        scheduledDate: new Date('2025-01-29'),
-        scheduledTime: '10:00',
-        status: 'SCHEDULED',
-      })
+      // Doctor already has a booking that day at this time
+      mockPrisma.appointment.findMany.mockResolvedValue([
+        { scheduledTime: '10:00', duration: 30, patient: { firstName: 'Ravi', lastName: 'K' } },
+      ])
 
       const request = new NextRequest('http://localhost/api/appointments', {
         method: 'POST',
@@ -530,7 +528,7 @@ describe('Appointments API - Comprehensive Tests', () => {
 
     it('should allow cancelled appointment slots to be reused', async () => {
       // Conflict check should exclude cancelled appointments
-      mockPrisma.appointment.findFirst.mockResolvedValue(null) // Query excludes CANCELLED status
+      mockPrisma.appointment.findMany.mockResolvedValue([]) // Query excludes CANCELLED status
       mockPrisma.appointment.create.mockResolvedValue({ id: 'apt-new' })
 
       const request = new NextRequest('http://localhost/api/appointments', {
@@ -545,7 +543,7 @@ describe('Appointments API - Comprehensive Tests', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(201)
-      expect(mockPrisma.appointment.findFirst).toHaveBeenCalledWith(
+      expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             status: {

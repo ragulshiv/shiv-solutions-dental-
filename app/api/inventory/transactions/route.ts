@@ -115,7 +115,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Create stock transaction (adjustment, usage, wastage, etc.)
 export async function POST(request: NextRequest) {
-  const { error, hospitalId, session } = await requireAuthAndRole()
+  // Admins and doctors record stock in / used
+  const { error, hospitalId, session } = await requireAuthAndRole(['ADMIN', 'DOCTOR'])
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

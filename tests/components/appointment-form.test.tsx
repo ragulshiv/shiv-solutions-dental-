@@ -112,6 +112,54 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+// The page now uses the shared server-search PatientPicker (tested on its own in
+// patient-picker.test.tsx). Here a small stand-in lists the sample patients so the
+// page's own wiring (selection → submit payload, validation) stays covered.
+vi.mock('@/components/patients/patient-picker', async () => {
+  const React = await import('react')
+  const people = [
+    { id: 'p1', patientId: 'PAT001', firstName: 'John', lastName: 'Doe', phone: '9876543210' },
+    { id: 'p2', patientId: 'PAT002', firstName: 'Jane', lastName: 'Smith', phone: '9876543211' },
+  ]
+  return {
+    PatientPicker: ({ value, onChange }: any) => {
+      const [q, setQ] = React.useState('')
+      if (value) {
+        return (
+          <div>
+            <p>
+              {value.firstName} {value.lastName}
+            </p>
+            <p>{value.patientId}</p>
+            <button type="button" onClick={() => onChange(null)}>
+              Change
+            </button>
+          </div>
+        )
+      }
+      const list = people.filter((p) =>
+        `${p.firstName} ${p.lastName} ${p.phone} ${p.patientId}`
+          .toLowerCase()
+          .includes(q.toLowerCase())
+      )
+      return (
+        <div>
+          <input placeholder="Search patient" value={q} onChange={(e) => setQ(e.target.value)} />
+          {list.length === 0 ? (
+            <p>No patients found</p>
+          ) : (
+            list.map((p) => (
+              <div key={p.id} onClick={() => onChange(p)}>
+                {p.firstName} {p.lastName}
+              </div>
+            ))
+          )}
+        </div>
+      )
+    },
+  }
+})
+
 import NewAppointmentPage from '@/app/(dashboard)/appointments/new/page'
 
 // ---------------------------------------------------------------------------

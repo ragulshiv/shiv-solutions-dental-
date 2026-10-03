@@ -598,6 +598,8 @@ model Appointment {
 
   chiefComplaint  String?           @db.Text
   notes           String?           @db.Text
+  // Doctor's examination findings and diagnosis for this visit (visit screen)
+  clinicalNotes   String?           @db.Text
 
   cancelledAt     DateTime?
   cancellationReason String?
@@ -612,6 +614,7 @@ model Appointment {
   patient         Patient           @relation(fields: [patientId], references: [id])
   doctor          Staff             @relation("DoctorAppointments", fields: [doctorId], references: [id])
   treatments      Treatment[]
+  prescriptions   Prescription[]
   reminders       AppointmentReminder[]
   videoConsultation VideoConsultation?
 
@@ -826,8 +829,12 @@ model TreatmentPlanItem {
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
+  // The treatment that carried out this plan item ("Do today")
+  treatmentId     String?                 @unique
+
   treatmentPlan   TreatmentPlan           @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
   procedure       Procedure               @relation(fields: [procedureId], references: [id])
+  treatment       Treatment?              @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
 
   @@index([treatmentPlanId])
 }
@@ -888,6 +895,7 @@ model Treatment {
   doctor          Staff           @relation(fields: [doctorId], references: [id])
   invoiceItems    InvoiceItem[]
   documents       Document[]
+  planItem        TreatmentPlanItem?
 
   @@unique([hospitalId, treatmentNo])
   @@index([hospitalId])
@@ -909,6 +917,8 @@ model Prescription {
   prescriptionNo  String
   patientId       String
   doctorId        String
+  // Visit (appointment) this Rx was written in, when written from the visit screen
+  appointmentId   String?
 
   diagnosis       String?
   notes           String?      @db.Text
@@ -921,11 +931,13 @@ model Prescription {
   hospital        Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   patient         Patient      @relation(fields: [patientId], references: [id])
   doctor          Staff        @relation(fields: [doctorId], references: [id])
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   medications     PrescriptionMedication[]
 
   @@unique([hospitalId, prescriptionNo])
   @@index([hospitalId])
   @@index([patientId])
+  @@index([appointmentId])
   @@index([doctorId])
 }
 

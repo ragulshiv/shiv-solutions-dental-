@@ -243,7 +243,7 @@ describe('GET/POST /api/invoices/[id]/payments', () => {
     mockAuth.requireAuthAndRole.mockResolvedValue({
       error: null,
       hospitalId: 'h1',
-      session: { user: { role: 'DOCTOR' } },
+      session: { user: { role: 'LAB_TECH' } },
     })
 
     const req = makeRequest('http://localhost/api/invoices/inv1/payments', {

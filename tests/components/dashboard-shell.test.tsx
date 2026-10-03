@@ -165,22 +165,32 @@ describe('DashboardShell', () => {
     expect(screen.getByTestId('sidebar-provider')).toBeInTheDocument()
   })
 
-  it('renders CommandBar', () => {
+  it('renders CommandBar when AI is configured', () => {
     render(
-      <DashboardShell user={defaultUser} hospital={defaultHospital}>
+      <DashboardShell user={defaultUser} hospital={defaultHospital} aiEnabled>
         <p>Content</p>
       </DashboardShell>
     )
     expect(screen.getByTestId('command-bar')).toBeInTheDocument()
   })
 
-  it('renders ChatWidget', () => {
+  it('renders ChatWidget when AI is configured', () => {
+    render(
+      <DashboardShell user={defaultUser} hospital={defaultHospital} aiEnabled>
+        <p>Content</p>
+      </DashboardShell>
+    )
+    expect(screen.getByTestId('chat-widget')).toBeInTheDocument()
+  })
+
+  it('hides the AI command bar and chat when no AI key is set', () => {
     render(
       <DashboardShell user={defaultUser} hospital={defaultHospital}>
         <p>Content</p>
       </DashboardShell>
     )
-    expect(screen.getByTestId('chat-widget')).toBeInTheDocument()
+    expect(screen.queryByTestId('command-bar')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('chat-widget')).not.toBeInTheDocument()
   })
 
   it('renders KeyboardShortcutHelp', () => {

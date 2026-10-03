@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { syncPlanForTreatment } from '@/lib/plan-sync'
 
 // POST - Start treatment
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -69,6 +70,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         },
       },
     })
+
+    // Keep the treatment plan's progress in step (never blocks the response)
+    await syncPlanForTreatment(id).catch((e) => console.error('Plan sync failed:', e))
 
     return NextResponse.json(updatedTreatment)
   } catch (error) {

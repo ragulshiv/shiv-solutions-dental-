@@ -51,6 +51,7 @@ import {
   formatDate,
 } from '@/lib/billing-utils'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { RefundDialog } from '@/components/billing/refund-dialog'
 
 interface Payment {
   id: string
@@ -103,6 +104,7 @@ export default function PaymentsPage() {
 
   // Filters
   const [search, setSearch] = useState('')
+  const [refundPayment, setRefundPayment] = useState<Payment | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [methodFilter, setMethodFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('all')
@@ -425,9 +427,7 @@ export default function PaymentsPage() {
                             View Invoice
                           </DropdownMenuItem>
                           {payment.status === 'COMPLETED' && (
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/billing/payments/${payment.id}/refund`)}
-                            >
+                            <DropdownMenuItem onClick={() => setRefundPayment(payment)}>
                               <RotateCcw className="h-4 w-4 mr-2" />
                               Process Refund
                             </DropdownMenuItem>
@@ -476,6 +476,11 @@ export default function PaymentsPage() {
           )}
         </CardContent>
       </Card>
+      <RefundDialog
+        payment={refundPayment}
+        onClose={() => setRefundPayment(null)}
+        onDone={fetchPayments}
+      />
     </div>
   )
 }

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkPatientLimit } from '@/lib/api-helpers'
+import {
+  normalizePhone,
+  patientAge,
+  validatePatientInput,
+  firstError,
+  cleanMedicalHistory,
+} from '@/lib/patient-utils'
 
 // Generate unique patient ID for the hospital
 async function generatePatientId(hospitalId: string): Promise<string> {
@@ -19,8 +26,8 @@ async function generatePatientId(hospitalId: string): Promise<string> {
     },
   })
 
-  if (lastPatient) {
-    const lastNumber = parseInt(lastPatient.patientId.slice(-5))
+  const lastNumber = lastPatient?.patientId ? parseInt(lastPatient.patientId.slice(-5), 10) : NaN
+  if (!isNaN(lastNumber)) {
     return `${prefix}${String(lastNumber + 1).padStart(5, '0')}`
   }
 
@@ -49,13 +56,37 @@ export async function GET(request: NextRequest) {
       isActive: true,
     }
 
+    const gender = searchParams.get('gender')
+    if (gender && gender !== 'all') where.gender = gender
+    const bloodGroup = searchParams.get('bloodGroup')
+    if (bloodGroup && bloodGroup !== 'all') where.bloodGroup = bloodGroup
+
+    // Exact phone lookup: used to show family members who share a number
+    const phoneExact = searchParams.get('phone')
+    if (phoneExact) where.phone = normalizePhone(phoneExact)
+
     if (search) {
+      const term = search.trim()
+      const digits = normalizePhone(term)
+      const parts = term.split(/\s+/).filter(Boolean)
       where.OR = [
-        { patientId: { contains: search } },
-        { firstName: { contains: search } },
-        { lastName: { contains: search } },
-        { phone: { contains: search } },
-        { email: { contains: search } },
+        { id: term },
+        { patientId: { contains: term } },
+        { firstName: { contains: term } },
+        { lastName: { contains: term } },
+        { phone: { contains: /^\d+$/.test(digits) ? digits : term } },
+        { email: { contains: term } },
+        // "Priya Sundaram" → first name + last name
+        ...(parts.length > 1
+          ? [
+              {
+                AND: [
+                  { firstName: { contains: parts[0] } },
+                  { lastName: { contains: parts.slice(1).join(' ') } },
+                ],
+              },
+            ]
+          : []),
       ]
     }
 
@@ -71,6 +102,7 @@ export async function GET(request: NextRequest) {
           email: true,
           gender: true,
           age: true,
+          dateOfBirth: true,
           bloodGroup: true,
           city: true,
         },
@@ -82,7 +114,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      patients,
+      patients: patients.map((p) => ({ ...p, age: patientAge(p) })),
       pagination: {
         page,
         limit,
@@ -120,86 +152,39 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      firstName,
-      lastName,
-      dateOfBirth,
-      age,
-      gender,
-      bloodGroup,
-      phone,
-      alternatePhone,
-      email,
-      address,
-      city,
-      state,
-      pincode,
-      aadharNumber,
-      occupation,
-      referredBy,
-      emergencyContactName,
-      emergencyContactPhone,
-      emergencyContactRelation,
-      medicalHistory,
-    } = body
-
-    // Validate required fields
-    if (!firstName || !lastName || !phone) {
-      return NextResponse.json(
-        { error: 'First name, last name, and phone are required' },
-        { status: 400 }
-      )
+    const { data, errors } = validatePatientInput(body, { partial: false })
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ error: firstError(errors), errors }, { status: 400 })
     }
+    const medicalHistory = cleanMedicalHistory(body.medicalHistory)
 
-    // Check for duplicate phone within this hospital
-    const existingPatient = await prisma.patient.findFirst({
-      where: { hospitalId, phone },
-    })
-
-    if (existingPatient) {
-      return NextResponse.json(
-        { error: 'A patient with this phone number already exists' },
-        { status: 409 }
-      )
-    }
+    // Family members often share one mobile number, so a shared phone is allowed.
+    // The form shows existing patients on that number before saving.
 
     // Generate patient ID for this hospital
-    const patientId = await generatePatientId(hospitalId)
+    const firstPatientId = await generatePatientId(hospitalId)
 
     // Create patient with medical history
-    const patient = await prisma.patient.create({
-      data: {
-        patientId,
-        firstName,
-        lastName,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        age,
-        gender,
-        bloodGroup,
-        phone,
-        alternatePhone,
-        email,
-        address,
-        city,
-        state,
-        pincode,
-        aadharNumber,
-        occupation,
-        referredBy,
-        emergencyContactName,
-        emergencyContactPhone,
-        emergencyContactRelation,
-        hospitalId,
-        medicalHistory: medicalHistory
-          ? {
-              create: medicalHistory,
-            }
-          : undefined,
-      },
-      include: {
-        medicalHistory: true,
-      },
-    })
+    let patient
+    for (let attempt = 0; ; attempt++) {
+      const patientId = attempt === 0 ? firstPatientId : await generatePatientId(hospitalId)
+      try {
+        patient = await prisma.patient.create({
+          data: {
+            ...data,
+            patientId,
+            hospitalId,
+            medicalHistory: medicalHistory ? { create: medicalHistory } : undefined,
+          } as any,
+          include: { medicalHistory: true },
+        })
+        break
+      } catch (e: any) {
+        // Two receptionists saving at the same moment can collide on the number: retry
+        if (e?.code === 'P2002' && attempt < 3) continue
+        throw e
+      }
+    }
 
     return NextResponse.json(patient, { status: 201 })
   } catch (error) {

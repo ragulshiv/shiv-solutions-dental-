@@ -57,6 +57,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { insuranceClaimStatusConfig, formatCurrency, formatDate } from '@/lib/billing-utils'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 interface InsuranceClaim {
   id: string
@@ -518,10 +519,12 @@ export default function InsuranceClaimsPage() {
                                 <Gavel className="h-4 w-4 mr-2" />
                                 Denial / Appeal
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleAiAnalyze(claim)}>
-                                <Brain className="h-4 w-4 mr-2" />
-                                AI Analyze
-                              </DropdownMenuItem>
+                              <AiOnly>
+                                <DropdownMenuItem onClick={() => handleAiAnalyze(claim)}>
+                                  <Brain className="h-4 w-4 mr-2" />
+                                  AI Analyze
+                                </DropdownMenuItem>
+                              </AiOnly>
                             </>
                           )}
                           {claim.invoices.length > 0 && (
