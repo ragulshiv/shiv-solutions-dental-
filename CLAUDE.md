@@ -69,8 +69,8 @@ if (error || !hospitalId)
 4. Screen: `app/(dashboard)/<module>/…/page.tsx`. Add to `config/nav.ts` if it needs a menu entry.
 5. Tests: add `tests/api/<module>.test.ts` (mock prisma like the neighbours).
 6. Verify: `npx tsc --noEmit` · `npm test` (all must pass; baseline 4,356 tests) · check in the browser preview.
-7. Commit, then `git push -u origin feature/<name>` and open a pull request at github.com/ragulshiv/shiv-solutions-dental-. A pre-push hook blocks direct pushes to `main` and runs the full test suite before every push.
-8. After the PR is merged on GitHub: `git switch main && git pull`, then run `clinic-start.cmd` to rebuild the live clinic app.
+7. Commit on the branch and push it (`git push -u origin feature/<name>`). A pre-push hook runs the full test suite before every push.
+8. **When the owner says OK**, Claude merges it: `git switch main && git pull`, `git merge --no-ff feature/<name>`, then `ALLOW_PROTECTED_PUSH=1 git push origin main` (the hook blocks plain pushes to `main` as a guard; the tests still run). Then run `clinic-start.cmd` to rebuild the live clinic app and check it over Tailscale. Never merge or deploy without that OK.
 
 Repo: `origin` = github.com/ragulshiv/shiv-solutions-dental- (private, ours). `upstream` = the original abinauv/dental-erp, fetch-only, for reference. The local branch `archive/original-history` keeps the pre-v1.0 history; never push it.
 
