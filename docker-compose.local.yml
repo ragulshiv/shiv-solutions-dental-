@@ -1,0 +1,21 @@
+# Local laptop overrides for docker-compose.dev.yml (Shiv's test setup).
+#   docker compose --env-file .env.docker -f docker-compose.dev.yml -f docker-compose.local.yml up -d mysql mailpit
+# - Binds every service to 127.0.0.1 so nothing is reachable from the Wi-Fi/LAN.
+# - Replaces the public MySQL password with the one in .env.docker (not committed).
+services:
+  mysql:
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set it in .env.docker}
+    ports: !override
+      - '127.0.0.1:3306:3306'
+  redis:
+    ports: !override
+      - '127.0.0.1:6379:6379'
+  minio:
+    ports: !override
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
+  mailpit:
+    ports: !override
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'

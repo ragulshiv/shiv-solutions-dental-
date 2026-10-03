@@ -1,0 +1,24 @@
+# Shiv's laptop production stack: docker-compose.yml, but built from this
+# checkout (so local feature changes ship) instead of pulling the published image.
+#   docker compose --env-file .env.clinic -f docker-compose.yml -f docker-compose.clinic.yml up -d --build
+# Use clinic-start.cmd rather than typing that.
+# - Separate project from the dev stack (dental-erp-dev), so dev work never touches clinic data.
+# - Everything stays on 127.0.0.1; phones reach it through `tailscale serve`.
+services:
+  mysql:
+    environment:
+      TZ: Asia/Kolkata
+    # Localhost only, for seeding and the mysql shell. 3306 belongs to the dev stack.
+    ports:
+      - '127.0.0.1:3307:3306'
+
+  migrate:
+    image: dental-erp:clinic
+    pull_policy: never
+
+  app:
+    build: .
+    image: dental-erp:clinic
+    pull_policy: build
+    env_file: !override
+      - .env.clinic
