@@ -122,7 +122,7 @@ export default function FormsSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Form Templates</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Form Templates</h1>
           <p className="text-muted-foreground">
             Create and manage intake forms, consent forms, and custom forms
           </p>

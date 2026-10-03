@@ -62,18 +62,18 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
                 className="h-8 w-8 rounded-lg object-cover"
               />
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar font-serif font-bold text-base">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar font-semibold text-sm">
                 {hospitalName?.charAt(0) || 'D'}
               </div>
             )}
-            <span className="font-serif text-[15px] font-semibold truncate text-white">
+            <span className="text-sm font-semibold truncate text-white">
               {hospitalName || 'Dental Clinic'}
             </span>
           </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            className="h-11 w-11 text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
             onClick={() => setMobileOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -99,7 +99,7 @@ export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSideba
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'flex h-10 items-center gap-3 rounded-md px-3 text-sm transition-colors',
+                          'flex h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors',
                           isActive
                             ? 'bg-sidebar-accent text-white font-semibold shadow-[inset_3px_0_0_hsl(var(--sidebar-primary))]'
                             : 'text-sidebar-muted hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'

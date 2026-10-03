@@ -139,7 +139,7 @@ export default function PaymentPlansPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payment Plans</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Payment Plans</h1>
           <p className="text-muted-foreground">Manage installment payment plans for invoices</p>
         </div>
         <Link href="/billing/payment-plans/new">

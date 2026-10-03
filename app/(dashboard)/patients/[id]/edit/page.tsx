@@ -186,7 +186,7 @@ export default function EditPatientPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Edit Patient</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Edit Patient</h1>
           <p className="text-muted-foreground">Update patient information</p>
         </div>
       </div>

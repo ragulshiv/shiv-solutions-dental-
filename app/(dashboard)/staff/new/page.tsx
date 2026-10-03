@@ -142,7 +142,7 @@ export default function NewStaffPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add New Staff</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Add New Staff</h1>
           <p className="text-muted-foreground">Create a new staff member account</p>
         </div>
       </div>

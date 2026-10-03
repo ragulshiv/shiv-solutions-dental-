@@ -253,7 +253,7 @@ export default function InsuranceClaimsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Insurance Claims</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Insurance Claims</h1>
           <p className="text-muted-foreground">Manage insurance claims and track settlements</p>
         </div>
         <div className="flex gap-2">

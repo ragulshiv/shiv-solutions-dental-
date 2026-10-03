@@ -244,7 +244,7 @@ export default function NewPaymentPlanPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Payment Plan</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Create Payment Plan</h1>
           <p className="text-muted-foreground">
             Set up an installment plan for an outstanding invoice
           </p>

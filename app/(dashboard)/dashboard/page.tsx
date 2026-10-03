@@ -15,10 +15,12 @@ import {
   Package,
 } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { formatTime } from '@/lib/appointment-utils'
 import dynamic from 'next/dynamic'
 import { InsightsPanel } from '@/components/ai/insights-panel'
+import { EmptyHint } from '@/components/ui/empty-hint'
 
 // Charts load after the first paint (the chart library is ~120 KB compressed);
 // the stat cards and appointments render without waiting for it.
@@ -118,29 +120,40 @@ export default function DashboardPage() {
     }).format(amount)
   }
 
-  const getGrowthIcon = (growth: number) => {
-    if (growth > 0) return <ArrowUpRight className="h-4 w-4 text-green-600" />
-    if (growth < 0) return <ArrowDownRight className="h-4 w-4 text-red-600" />
-    return null
-  }
-
-  const getGrowthColor = (growth: number) => {
-    if (growth > 0) return 'text-green-600'
-    if (growth < 0) return 'text-red-600'
-    return 'text-muted-foreground'
+  // Month-on-month change as a compact pill: emerald up, rose down, neutral flat.
+  const trendPill = (growth: number) => {
+    const up = growth > 0
+    const down = growth < 0
+    const Arrow = up ? ArrowUpRight : down ? ArrowDownRight : null
+    return (
+      <span
+        className={cn(
+          'inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums',
+          up &&
+            'border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300',
+          down &&
+            'border-rose-200/60 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300',
+          !up && !down && 'border-border bg-muted text-muted-foreground'
+        )}
+      >
+        {Arrow && <Arrow className="h-3 w-3" />}
+        {up ? '+' : ''}
+        {growth.toFixed(1)}%
+      </span>
+    )
   }
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Dashboard</h1>
           <p className="text-muted-foreground">Loading your practice data...</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
                 <div className="h-4 w-24 bg-muted rounded animate-pulse" />
               </CardHeader>
               <CardContent>
@@ -158,7 +171,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Dashboard</h1>
           <p className="text-muted-foreground text-red-600">Failed to load dashboard data</p>
         </div>
         <Card className="border-red-200">
@@ -180,7 +193,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome message */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
           Here&apos;s what&apos;s happening at your dental practice today.
         </p>
@@ -190,36 +203,38 @@ export default function DashboardPage() {
       <InsightsPanel />
 
       {/* Stats cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         {/* Total Patients */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+              Total Patients
+            </CardTitle>
+            <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
               {stats.overview.totalPatients.toLocaleString()}
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              {getGrowthIcon(stats.overview.patientGrowth)}
-              <span className={getGrowthColor(stats.overview.patientGrowth)}>
-                {stats.overview.patientGrowth > 0 ? '+' : ''}
-                {stats.overview.patientGrowth.toFixed(1)}%
-              </span>
-              <span className="text-muted-foreground">from last month</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {trendPill(stats.overview.patientGrowth)}
+              <span className="text-xs text-muted-foreground">vs last month</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Today's Appointments */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s Appointments</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+              Today&apos;s Appointments
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.overview.todayAppointments}</div>
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
+              {stats.overview.todayAppointments}
+            </div>
             <p className="text-xs text-muted-foreground">
               {stats.overview.completedAppointmentsToday} completed,{' '}
               {stats.overview.pendingAppointments} pending
@@ -229,33 +244,33 @@ export default function DashboardPage() {
 
         {/* This Month Revenue */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month Revenue</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+              This Month Revenue
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
               {formatCurrency(stats.overview.thisMonthRevenue)}
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              {getGrowthIcon(stats.overview.revenueGrowth)}
-              <span className={getGrowthColor(stats.overview.revenueGrowth)}>
-                {stats.overview.revenueGrowth > 0 ? '+' : ''}
-                {stats.overview.revenueGrowth.toFixed(1)}%
-              </span>
-              <span className="text-muted-foreground">from last month</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {trendPill(stats.overview.revenueGrowth)}
+              <span className="text-xs text-muted-foreground">vs last month</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Pending Payments */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2 md:p-6 md:pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground md:text-sm">
+              Pending Payments
+            </CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl font-semibold tabular-nums tracking-tight md:text-2xl">
               {formatCurrency(stats.overview.pendingPayments)}
             </div>
             <p className="text-xs text-muted-foreground">Outstanding receivables</p>
@@ -278,7 +293,10 @@ export default function DashboardPage() {
                 formatCurrency={formatCurrency}
               />
             ) : (
-              <p className="text-muted-foreground text-center py-8">No revenue data available</p>
+              <EmptyHint
+                title="No revenue data available"
+                tip="Revenue appears here once invoices are paid."
+              />
             )}
           </CardContent>
         </Card>
@@ -306,7 +324,10 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-muted-foreground text-center py-8">No upcoming appointments</p>
+                <EmptyHint
+                  title="No upcoming appointments"
+                  tip="Book an appointment and it will show up here."
+                />
               )}
             </div>
             <Link href="/appointments">
@@ -329,9 +350,10 @@ export default function DashboardPage() {
             {stats.charts.appointmentsByStatus && stats.charts.appointmentsByStatus.length > 0 ? (
               <AppointmentStatusPie data={stats.charts.appointmentsByStatus} />
             ) : (
-              <p className="text-muted-foreground text-center py-8">
-                No appointment data available
-              </p>
+              <EmptyHint
+                title="No appointment data available"
+                tip="Appointment mix appears once this month has bookings."
+              />
             )}
           </CardContent>
         </Card>
@@ -349,7 +371,10 @@ export default function DashboardPage() {
                 formatCurrency={formatCurrency}
               />
             ) : (
-              <p className="text-muted-foreground text-center py-8">No revenue data available</p>
+              <EmptyHint
+                title="No revenue data available"
+                tip="Revenue appears here once invoices are paid."
+              />
             )}
           </CardContent>
         </Card>
@@ -370,7 +395,10 @@ export default function DashboardPage() {
                 formatCurrency={formatCurrency}
               />
             ) : (
-              <p className="text-muted-foreground text-center py-8">No procedure data available</p>
+              <EmptyHint
+                title="No procedure data available"
+                tip="Your most common procedures will appear here."
+              />
             )}
           </CardContent>
         </Card>

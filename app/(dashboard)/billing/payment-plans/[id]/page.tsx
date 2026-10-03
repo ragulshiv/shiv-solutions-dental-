@@ -319,7 +319,7 @@ export default function PaymentPlanDetailPage({ params }: { params: Promise<{ id
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Payment Plan</h1>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Payment Plan</h1>
               {statusBadge(plan.status)}
             </div>
             <p className="text-muted-foreground">

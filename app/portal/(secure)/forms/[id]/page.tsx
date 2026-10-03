@@ -117,7 +117,7 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">{template.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{template.name}</h1>
             <p className="text-sm text-muted-foreground">
               Submitted on{' '}
               {new Date(existingSubmission.createdAt).toLocaleDateString('en-IN', {
@@ -152,7 +152,7 @@ export default function PatientFormPage({ params }: { params: Promise<{ id: stri
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{template.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{template.name}</h1>
           {template.description && (
             <p className="text-sm text-muted-foreground">{template.description}</p>
           )}

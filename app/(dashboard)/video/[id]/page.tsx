@@ -241,7 +241,7 @@ export default function DoctorVideoPage({ params }: { params: Promise<{ id: stri
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">Video Consultation</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Video Consultation</h1>
             {statusBadge(consultation.status)}
           </div>
           <p className="text-sm text-muted-foreground">

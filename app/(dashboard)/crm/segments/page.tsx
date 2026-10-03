@@ -143,7 +143,7 @@ export default function SegmentsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Patient Segments</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">Patient Segments</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i}>
@@ -163,7 +163,7 @@ export default function SegmentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Patient Segments</h1>
+          <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">Patient Segments</h1>
           <p className="text-muted-foreground mt-1">
             {data?.totalPatients || 0} total active patients
           </p>

@@ -30,7 +30,7 @@ export default async function PortalProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Preferences</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">My Preferences</h1>
         <p className="text-muted-foreground">
           These apply to your portal only. Your clinic does not see them.
         </p>

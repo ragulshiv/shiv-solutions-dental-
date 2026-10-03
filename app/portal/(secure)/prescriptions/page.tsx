@@ -58,7 +58,7 @@ export default function PatientPrescriptions() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Prescriptions</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Prescriptions</h1>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24" />
         ))}
@@ -68,7 +68,7 @@ export default function PatientPrescriptions() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Prescriptions</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Prescriptions</h1>
 
       {prescriptions.length === 0 ? (
         <Card>

@@ -165,7 +165,7 @@ export default function NewPreAuthPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Pre-Authorization</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">New Pre-Authorization</h1>
           <p className="text-muted-foreground">Request insurance pre-approval for treatment</p>
         </div>
       </div>

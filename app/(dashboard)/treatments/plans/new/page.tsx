@@ -237,7 +237,7 @@ export default function NewTreatmentPlanPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Treatment Plan</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">New Treatment Plan</h1>
           <p className="text-muted-foreground">
             Create a comprehensive treatment plan for a patient
           </p>

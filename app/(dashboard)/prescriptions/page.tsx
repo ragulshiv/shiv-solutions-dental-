@@ -97,7 +97,7 @@ export default function PrescriptionsPage() {
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-semibold flex items-center gap-2 md:text-3xl tracking-tight">
             <ClipboardList className="h-8 w-8" />
             Prescriptions
           </h1>

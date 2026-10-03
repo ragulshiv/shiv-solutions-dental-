@@ -170,7 +170,9 @@ export default function PrescriptionDetailPage() {
                   </div>
                 )}
                 <div>
-                  <h1 className="text-xl font-bold">{hospital?.name || 'Dental Clinic'}</h1>
+                  <h1 className="text-xl font-semibold tracking-tight">
+                    {hospital?.name || 'Dental Clinic'}
+                  </h1>
                   {hospital?.tagline && (
                     <p className="text-sm text-muted-foreground">{hospital.tagline}</p>
                   )}

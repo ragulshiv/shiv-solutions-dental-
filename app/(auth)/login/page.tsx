@@ -71,7 +71,7 @@ function LoginForm() {
     <Card className="shadow-lg">
       <CardHeader className="space-y-1 text-center">
         <div className="flex justify-center mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-serif text-xl font-bold">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-xl font-semibold">
             {BRAND.initial}
           </div>
         </div>

@@ -253,7 +253,9 @@ export default function TreatmentDetailPage({ params }: { params: Promise<{ id: 
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{treatment.treatmentNo}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {treatment.treatmentNo}
+              </h1>
               {getStatusBadge(treatment.status)}
             </div>
             <p className="text-muted-foreground">Created on {formatDate(treatment.createdAt)}</p>

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useAI, type Insight } from './ai-provider'
 import { cn } from '@/lib/utils'
+import { EmptyHint } from '@/components/ui/empty-hint'
 
 const SEVERITY_STYLES: Record<string, string> = {
   INFO: 'bg-blue-50 border-blue-200 text-blue-800',
@@ -92,7 +93,7 @@ export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
         <h3 className="text-sm font-semibold">AI Insights</h3>
         <button
           onClick={generateInsights}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="-mr-2 min-h-11 rounded-md px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-primary md:min-h-0 md:py-1"
         >
           Refresh
         </button>
@@ -108,7 +109,10 @@ export function InsightsPanel({ maxItems = 4 }: { maxItems?: number }) {
 
       {/* Empty */}
       {!insightsLoading && visible.length === 0 && (
-        <p className="text-xs text-muted-foreground">No active insights right now.</p>
+        <EmptyHint
+          title="No new insights right now"
+          tip="Tap Refresh to scan your clinic data for anything that needs attention."
+        />
       )}
 
       {/* Insight cards */}

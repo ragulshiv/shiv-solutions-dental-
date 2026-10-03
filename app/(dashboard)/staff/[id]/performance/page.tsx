@@ -202,7 +202,9 @@ export default function PerformancePage({ params }: { params: Promise<{ id: stri
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+              Performance Dashboard
+            </h1>
             <p className="text-muted-foreground">
               {data.staff.name} ({data.staff.employeeId})
               {data.staff.specialization && ` - ${data.staff.specialization}`}

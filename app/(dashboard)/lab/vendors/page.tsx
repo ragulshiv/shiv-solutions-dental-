@@ -324,7 +324,7 @@ export default function LabVendorsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lab Vendors</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Lab Vendors</h1>
           <p className="text-muted-foreground">
             Manage external laboratory vendors and their information
           </p>

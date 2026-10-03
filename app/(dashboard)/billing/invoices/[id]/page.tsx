@@ -336,7 +336,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{invoice.invoiceNo}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {invoice.invoiceNo}
+              </h1>
               {getStatusBadge(invoice.status)}
             </div>
             <p className="text-muted-foreground">Created on {formatDate(invoice.invoiceDate)}</p>

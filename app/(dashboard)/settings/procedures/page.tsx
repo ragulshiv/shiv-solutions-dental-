@@ -333,7 +333,7 @@ export default function ProceduresSettingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Procedures</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Procedures</h1>
           <p className="text-muted-foreground">Manage dental procedures catalog</p>
         </div>
         <Button onClick={openCreateDialog}>

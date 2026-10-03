@@ -237,7 +237,9 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{plan.planNumber}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {plan.planNumber}
+              </h1>
               {getStatusBadge(plan.status)}
               {plan.consentGiven && (
                 <Badge variant="outline" className="bg-green-50 text-green-700">

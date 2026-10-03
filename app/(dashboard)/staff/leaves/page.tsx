@@ -286,7 +286,7 @@ export default function LeavesPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Leave Management</h1>
             <p className="text-muted-foreground">Manage staff leave requests</p>
           </div>
         </div>

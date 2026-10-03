@@ -187,7 +187,7 @@ export default function TransactionsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Stock Transactions</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">Stock Transactions</h1>
         <div className="flex gap-2">
           <Link
             href="/inventory"

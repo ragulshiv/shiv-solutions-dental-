@@ -123,7 +123,7 @@ export default function CommunicationsPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Communication Center</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">Communication Center</h1>
         <p className="text-muted-foreground">Manage SMS, Email, Templates, and Patient Feedback</p>
       </div>
 

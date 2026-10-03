@@ -1,23 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { Providers } from '@/components/providers'
 import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 import { BRAND } from '@/config/brand'
 
-// Body text: IBM Plex Sans (clear at small sizes, good figures for billing tables).
-// Headings: Source Serif 4, applied to every h1 via globals.css and to `font-serif`.
-const sans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-sans',
-})
-const serif = Source_Serif_4({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-serif',
-})
+// One sans family for everything (Inter, variable weight). Weights in use:
+// semibold for headers, medium for labels, regular for body.
+const sans = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
   title: {
@@ -53,7 +44,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#111c33',
+  themeColor: '#0f172a',
   width: 'device-width',
   initialScale: 1,
 }
@@ -61,7 +52,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${sans.variable} ${serif.variable} font-sans`}>
+      <body className={`${sans.variable} font-sans`}>
         <Providers>
           {children}
           <Toaster />

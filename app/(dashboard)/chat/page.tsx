@@ -259,7 +259,7 @@ export default function ChatPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b px-6 py-3 shrink-0">
         <div>
-          <h1 className="text-lg font-semibold">AI Assistant</h1>
+          <h1 className="text-lg font-semibold tracking-tight">AI Assistant</h1>
           <p className="text-xs text-muted-foreground">
             {voice.handsFreeMode
               ? "Hands-free mode — speak naturally, I'll respond and keep listening"
