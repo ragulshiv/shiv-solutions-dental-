@@ -447,7 +447,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-semibold tracking-tight">
               {patient.firstName} {patient.lastName}
             </h1>
             <p className="text-muted-foreground">Patient ID: {patient.patientId}</p>

@@ -37,7 +37,7 @@ export default function PatientRecords() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Medical Records</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Medical Records</h1>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>

@@ -3,85 +3,86 @@
 @tailwind utilities;
 
 /*
- * Design tokens: "Clinical premium" theme.
+ * Design tokens: modern SaaS theme (mobile-first, Linear/Stripe-like).
  * Every colour in the app comes from these HSL triples (used as hsl(var(--x))).
  * To retheme, change values here, not in pages.
- *   ink      deep navy text, so body copy reads crisp, not grey
- *   teal     primary brand colour, deep enough for white text
- *   paper    warm off-white page background; cards sit on it in pure white
- *   sidebar  dark navy navigation rail (its own token set below)
+ *   neutrals  zinc/slate; text is slate-900 and secondary text slate-600
+ *             (kept dark on purpose: lighter greys read as washed out)
+ *   primary   teal-700 for filled buttons (white text passes WCAG AA);
+ *             teal-600 for rings, active tabs and accents
+ *   sidebar   slate-900 #0f172a navigation drawer/rail
  */
 @layer base {
   :root {
-    --background: 40 30% 97.5%;
-    --foreground: 220 45% 11%;
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 220 45% 11%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 45% 11%;
-    --primary: 186 72% 25%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 175 77% 26%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 38 22% 93%;
-    --secondary-foreground: 220 45% 14%;
-    --muted: 38 22% 94%;
-    --muted-foreground: 220 14% 33%;
-    --accent: 184 38% 92%;
-    --accent-foreground: 186 72% 18%;
-    --destructive: 0 70% 44%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 215 19% 35%;
+    --accent: 166 76% 96%;
+    --accent-foreground: 175 77% 22%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 36 16% 86%;
-    --input: 36 12% 78%;
-    --ring: 186 72% 30%;
-    --radius: 0.5rem;
-    /* Navigation rail */
-    --sidebar: 220 47% 13%;
-    --sidebar-foreground: 40 25% 92%;
-    --sidebar-muted: 218 18% 66%;
-    --sidebar-accent: 219 38% 20%;
-    --sidebar-border: 219 32% 21%;
-    --sidebar-primary: 178 58% 58%;
+    --border: 240 6% 90%;
+    --input: 240 5% 84%;
+    --ring: 175 84% 32%;
+    --radius: 0.625rem;
+    /* Navigation drawer / rail (slate-900) */
+    --sidebar: 222 47% 11%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-muted: 215 20% 65%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-primary: 172 66% 50%;
     /* Chart colors */
-    --chart-1: 186 72% 30%;
-    --chart-2: 220 50% 32%;
-    --chart-3: 32 80% 50%;
-    --chart-4: 158 50% 38%;
-    --chart-5: 352 62% 48%;
-    --chart-6: 262 35% 52%;
+    --chart-1: 175 84% 32%;
+    --chart-2: 215 25% 35%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 160 84% 39%;
+    --chart-5: 350 89% 60%;
+    --chart-6: 262 52% 55%;
   }
 
   .dark {
-    --background: 222 32% 7%;
-    --foreground: 40 22% 94%;
-    --card: 222 28% 10%;
-    --card-foreground: 40 22% 94%;
-    --popover: 222 28% 11%;
-    --popover-foreground: 40 22% 94%;
-    --primary: 180 55% 46%;
-    --primary-foreground: 222 40% 8%;
-    --secondary: 222 22% 16%;
-    --secondary-foreground: 40 22% 94%;
-    --muted: 222 22% 15%;
-    --muted-foreground: 220 12% 72%;
-    --accent: 186 32% 17%;
-    --accent-foreground: 178 55% 80%;
-    --destructive: 0 62% 52%;
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+    --card: 222 40% 8%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 40% 9%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 173 80% 40%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 217 33% 14%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 13%;
+    --muted-foreground: 215 20% 70%;
+    --accent: 175 50% 13%;
+    --accent-foreground: 171 77% 77%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 18% 20%;
-    --input: 222 16% 26%;
-    --ring: 180 55% 46%;
-    --sidebar: 223 36% 5%;
-    --sidebar-foreground: 40 22% 92%;
-    --sidebar-muted: 218 12% 62%;
-    --sidebar-accent: 222 26% 13%;
-    --sidebar-border: 222 22% 13%;
-    --sidebar-primary: 178 58% 58%;
+    --border: 217 33% 17%;
+    --input: 217 25% 24%;
+    --ring: 173 80% 40%;
+    --sidebar: 222 47% 4%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-muted: 215 20% 62%;
+    --sidebar-accent: 217 33% 13%;
+    --sidebar-border: 217 33% 12%;
+    --sidebar-primary: 172 66% 50%;
     /* Chart colors dark */
-    --chart-1: 180 55% 50%;
-    --chart-2: 215 60% 65%;
-    --chart-3: 32 85% 60%;
-    --chart-4: 158 45% 52%;
-    --chart-5: 352 70% 64%;
-    --chart-6: 262 45% 68%;
+    --chart-1: 173 80% 45%;
+    --chart-2: 213 40% 68%;
+    --chart-3: 38 92% 60%;
+    --chart-4: 158 64% 52%;
+    --chart-5: 350 89% 68%;
+    --chart-6: 262 60% 70%;
   }
 }
 
@@ -93,9 +94,8 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: 'cv11', 'ss01';
   }
-  /* Page titles use the serif display face everywhere, whatever classes a page sets. */
   h1 {
-    @apply font-serif tracking-tight;
+    @apply tracking-tight;
   }
   /* Figures line up in tables, totals and stat cards. */
   table,

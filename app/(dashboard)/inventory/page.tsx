@@ -232,7 +232,7 @@ export default function InventoryPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Inventory</h1>
           <p className="text-muted-foreground">Manage inventory items and stock levels</p>
         </div>
         <div className="flex flex-wrap gap-2">

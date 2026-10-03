@@ -141,7 +141,7 @@ export default function PricingPage() {
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-serif font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold">
               {BRAND.initial}
             </div>
             <span className="font-semibold">{BRAND.name}</span>
@@ -171,7 +171,7 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             Simple, transparent pricing
           </h1>
           <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">

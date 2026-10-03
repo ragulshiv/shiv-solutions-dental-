@@ -249,7 +249,7 @@ export default function ClinicSettingsPage() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 md:text-3xl tracking-tight">
           <Building2 className="w-8 h-8" />
           Clinic Information
         </h1>

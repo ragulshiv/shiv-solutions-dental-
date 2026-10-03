@@ -374,7 +374,7 @@ export default function DataImportPage() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 tracking-tight">
           <Upload className="h-6 w-6 text-emerald-600" />
           Data Import
         </h1>

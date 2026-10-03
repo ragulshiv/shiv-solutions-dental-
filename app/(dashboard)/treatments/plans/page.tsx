@@ -161,7 +161,7 @@ export default function TreatmentPlansPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Treatment Plans</h1>
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Treatment Plans</h1>
             <p className="text-muted-foreground">Create and manage comprehensive treatment plans</p>
           </div>
         </div>

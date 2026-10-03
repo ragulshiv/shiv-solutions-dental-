@@ -414,7 +414,7 @@ export default function MembershipPlansPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Membership Plans</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Membership Plans</h1>
             <p className="text-muted-foreground">Create and manage membership plans for patients</p>
           </div>
         </div>
@@ -441,7 +441,7 @@ export default function MembershipPlansPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
               <Crown className="h-6 w-6 text-amber-500" />
               {detailPlan.name}
             </h1>
@@ -562,7 +562,7 @@ export default function MembershipPlansPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Membership Plans</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Membership Plans</h1>
           <p className="text-muted-foreground">Create and manage membership plans for patients</p>
         </div>
         <Button onClick={openCreatePlan}>

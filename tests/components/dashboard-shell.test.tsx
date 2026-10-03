@@ -38,6 +38,14 @@ vi.mock('@/components/layout/mobile-sidebar', () => ({
   ),
 }))
 
+vi.mock('@/components/layout/bottom-nav', () => ({
+  BottomNav: ({ role }: any) => (
+    <div data-testid="bottom-nav" data-role={role}>
+      BottomNav
+    </div>
+  ),
+}))
+
 vi.mock('@/components/layout/header', () => ({
   Header: ({ user }: any) => (
     <div data-testid="header" data-user-name={user.name} data-user-role={user.role}>
@@ -108,6 +116,15 @@ describe('DashboardShell', () => {
     )
     const mobileSidebar = screen.getByTestId('mobile-sidebar')
     expect(mobileSidebar).toHaveAttribute('data-role', 'DOCTOR')
+  })
+
+  it('renders the phone bottom nav with the user role', () => {
+    render(
+      <DashboardShell user={defaultUser} hospital={defaultHospital}>
+        <p>Content</p>
+      </DashboardShell>
+    )
+    expect(screen.getByTestId('bottom-nav')).toHaveAttribute('data-role', 'DOCTOR')
   })
 
   it('renders Header with user info', () => {

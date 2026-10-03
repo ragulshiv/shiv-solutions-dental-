@@ -201,7 +201,7 @@ export default function NewLabOrderPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">New Lab Order</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">New Lab Order</h1>
           <p className="text-muted-foreground">Create a new lab work order</p>
         </div>
       </div>

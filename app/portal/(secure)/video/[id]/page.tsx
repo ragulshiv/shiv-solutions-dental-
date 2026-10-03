@@ -218,7 +218,7 @@ export default function PatientVideoPage({ params }: { params: Promise<{ id: str
         </Link>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">Video Consultation</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Video Consultation</h1>
             {statusBadge(consultation.status)}
           </div>
         </div>

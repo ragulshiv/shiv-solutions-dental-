@@ -358,7 +358,7 @@ export default function LoyaltyPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-semibold flex items-center gap-2 md:text-3xl tracking-tight">
             <Gift className="h-7 w-7 text-purple-500" />
             Loyalty Points
           </h1>

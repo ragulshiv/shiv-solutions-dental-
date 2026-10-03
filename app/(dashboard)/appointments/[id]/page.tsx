@@ -283,7 +283,9 @@ export default function AppointmentDetailsPage({ params }: { params: Promise<{ i
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{appointment.appointmentNo}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {appointment.appointmentNo}
+              </h1>
               {getStatusBadge(appointment.status)}
               {appointment.isVirtual && (
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">

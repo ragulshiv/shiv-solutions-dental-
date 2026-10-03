@@ -3,6 +3,7 @@
 import { Sidebar } from './sidebar'
 import { MobileSidebar } from './mobile-sidebar'
 import { Header } from './header'
+import { BottomNav } from './bottom-nav'
 import { SidebarProvider } from './sidebar-context'
 import { AIProvider } from '@/components/ai/ai-provider'
 import { CommandBar } from '@/components/ai/command-bar'
@@ -50,12 +51,13 @@ export function DashboardShell({ children, user, hospital }: DashboardShellProps
           {/* Main content */}
           <div className="flex flex-1 flex-col overflow-hidden">
             <Header user={user} />
-            <main className="flex-1 overflow-auto bg-background p-4 md:p-8">
-              <Breadcrumb className="mb-4" />
+            <main className="flex-1 overflow-auto bg-background p-4 pb-24 md:p-8">
+              <Breadcrumb className="mb-4 hidden md:flex" />
               {children}
             </main>
           </div>
         </div>
+        <BottomNav role={user.role} />
       </SidebarProvider>
       <CommandBar />
       <ChatWidget />

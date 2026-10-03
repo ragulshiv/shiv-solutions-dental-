@@ -163,7 +163,7 @@ export default function BookAppointment() {
         <Button variant="ghost" size="sm" onClick={() => router.push('/portal/appointments')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Book Appointment</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Book Appointment</h1>
       </div>
 
       {/* Step indicator */}

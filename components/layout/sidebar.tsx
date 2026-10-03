@@ -53,13 +53,13 @@ export function Sidebar({ role, hospitalName, hospitalLogo, plan }: SidebarProps
                 className="h-8 w-8 shrink-0 rounded-lg object-cover"
               />
             ) : (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar font-serif font-bold text-base">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar font-semibold text-sm">
                 {hospitalName?.charAt(0) || 'D'}
               </div>
             )}
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="font-serif text-[15px] font-semibold leading-tight truncate max-w-[140px] text-white">
+                <span className="text-sm font-semibold leading-tight truncate max-w-[140px] text-white">
                   {hospitalName || 'Dental Clinic'}
                 </span>
                 {plan && (

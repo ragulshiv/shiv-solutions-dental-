@@ -131,7 +131,7 @@ export default function UploadPhotoPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Upload Photo</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Upload Photo</h1>
           <p className="text-sm text-muted-foreground">
             Send a dental photo to your doctor for triage
           </p>

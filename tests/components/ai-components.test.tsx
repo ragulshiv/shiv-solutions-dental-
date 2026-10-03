@@ -663,7 +663,7 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('Refresh')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getByText('No active insights right now.')).toBeInTheDocument()
+      expect(screen.getByText('No new insights right now')).toBeInTheDocument()
     })
   })
 

@@ -136,7 +136,7 @@ export default function SecuritySettingsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Security Settings</h1>
+          <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">Security Settings</h1>
           <p className="text-muted-foreground">Configure security policies and access controls</p>
         </div>
         <div className="flex items-center justify-center h-64">
@@ -149,7 +149,7 @@ export default function SecuritySettingsPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 md:text-3xl tracking-tight">
           <Shield className="w-8 h-8" />
           Security Settings
         </h1>

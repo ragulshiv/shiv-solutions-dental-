@@ -47,7 +47,7 @@ export default function CRMDashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">CRM Dashboard</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">CRM Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
@@ -64,7 +64,7 @@ export default function CRMDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">CRM Dashboard</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl tracking-tight">CRM Dashboard</h1>
       </div>
 
       {/* Stats Cards */}

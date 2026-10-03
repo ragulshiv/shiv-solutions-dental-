@@ -108,7 +108,7 @@ export default function AISettingsPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">
       <div>
-        <h1 className="text-xl font-bold">AI Settings</h1>
+        <h1 className="text-xl font-semibold tracking-tight">AI Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Configure AI features powered by OpenRouter
         </p>

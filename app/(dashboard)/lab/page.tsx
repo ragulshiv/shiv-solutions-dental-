@@ -295,7 +295,7 @@ export default function LabWorkPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Lab Work Management</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Lab Work Management</h1>
           <p className="text-muted-foreground">
             Manage lab orders, vendors, and track work progress
           </p>

@@ -53,13 +53,16 @@ if (error || !hospitalId)
 
 **Money / GST:** use `lib/billing-utils.ts`; don't recompute tax inline.
 
-## Design system: "Clinical premium"
+## Design system: mobile-first SaaS (Linear/Stripe style)
 
-- All colours are HSL tokens in `app/globals.css` (`:root` light, `.dark` dark). Pages use token classes (`bg-card`, `text-muted-foreground`, `bg-primary`, …). **Never hard-code hex or `gray-500` style colours in pages.**
-- Palette: navy ink text (`--foreground`), deep teal brand (`--primary`), warm paper background (`--background`), white cards, dark navy sidebar (`--sidebar-*` tokens → `bg-sidebar`, `text-sidebar-muted`, …).
-- Fonts (`app/layout.tsx`): IBM Plex Sans for body (`font-sans`) and Source Serif 4 for display (`font-serif`). Every `h1` is serif automatically.
-- Status colours: Badge variants `success` / `warning` / `info` / `destructive` (they include dark-mode styles).
-- Charts: colours from `lib/chart-theme.ts` (`--chart-1..6`).
+- **Mobile first.** Write the phone layout first, then scale up with `md:` / `lg:`. Phones get a bottom tab bar (`components/layout/bottom-nav.tsx`: Dashboard, Patients, Appointments, Billing + More), and More opens the slate-900 drawer. The desktop sidebar starts at `md:`. The main area has `pb-24` on phones so the tab bar never covers content.
+- **Touch targets ≥ 44px on phones.** Button, Input, Select and Tabs are already `h-11` on phones and compact again from `md:`. Keep that for any custom tappable element (`min-h-11`).
+- **Colours** are HSL tokens in `app/globals.css` (`:root` light, `.dark` dark): zinc/slate neutrals, slate-900 text, slate-600 secondary text (don't lighten it; pale grey read as washed out), teal-700 filled buttons (white text passes contrast), teal-600 rings and active states, slate-900 `--sidebar-*`. **Never hard-code hex or `gray-500` style colours in pages.**
+- **Type:** one family, Inter (`app/layout.tsx`). No serif anywhere except the ℞ glyph on printed prescriptions. Page titles `text-2xl md:text-3xl font-semibold tracking-tight`; section headers `font-semibold`; subtext `text-sm text-muted-foreground`; numbers and money `tabular-nums tracking-tight`.
+- **Cards:** `rounded-xl border-border/60 shadow-card`, with `p-4` on phones and `p-6` from `md:` (built into `components/ui/card.tsx`).
+- **KPI rows:** `grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4`; never one full-width small card per row on phones. Trends are pills (emerald up / rose down, with an arrow); see `trendPill` in the dashboard page.
+- **Empty spots inside cards:** use `EmptyHint` (`components/ui/empty-hint.tsx`), a soft teal banner with a Sparkles icon and one actionable tip. Use `EmptyState` only for a whole empty list page.
+- Status colours: Badge variants `success` / `warning` / `info` / `destructive`. Charts: `lib/chart-theme.ts` (`--chart-1..6`).
 
 ## Adding a feature (checklist)
 

@@ -949,7 +949,7 @@ export default function SetupGuidePage() {
             </Button>
           </Link>
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-semibold flex items-center gap-2 tracking-tight">
           <BookOpen className="w-7 h-7" />
           Setup Guide
         </h1>

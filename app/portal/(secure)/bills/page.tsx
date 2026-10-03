@@ -102,7 +102,7 @@ export default function PatientBills() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Bills & Payments</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Bills & Payments</h1>
 
       <Tabs value={statusFilter} onValueChange={setStatusFilter}>
         <TabsList>

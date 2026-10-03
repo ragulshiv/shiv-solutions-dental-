@@ -17,8 +17,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
+        // One family everywhere (Inter, loaded in app/layout.tsx). No serif face.
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-serif)', 'ui-serif', 'Georgia', 'serif'],
       },
       colors: {
         sidebar: {
@@ -64,7 +64,7 @@ module.exports = {
         },
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(16 24 40 / 0.05), 0 1px 3px 0 rgb(16 24 40 / 0.04)',
+        card: '0 1px 3px rgba(0,0,0,0.04)',
       },
       borderRadius: {
         lg: 'var(--radius)',

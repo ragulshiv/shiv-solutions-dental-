@@ -260,7 +260,7 @@ export default function EditStaffPage({ params }: { params: Promise<{ id: string
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Edit Staff</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Edit Staff</h1>
           <p className="text-muted-foreground">Update staff member details</p>
         </div>
       </div>
