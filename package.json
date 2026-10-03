@@ -1,9 +1,9 @@
 {
-  "name": "shiv-solutions-dental",
+  "name": "chairos",
   "version": "1.0.0",
-  "description": "Shiv Solutions: dental clinic management software",
+  "description": "ChairOS: dental clinic management software",
   "private": true,
-  "author": "Shiv Solutions",
+  "author": "ChairOS",
   "license": "UNLICENSED",
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

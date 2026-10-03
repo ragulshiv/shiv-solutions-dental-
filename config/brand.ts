@@ -6,12 +6,12 @@
  * sign-up and in Settings → Clinic, and they show in the sidebar.
  */
 export const BRAND = {
-  /** Used in sentences: "Sign in to your Shiv Solutions account". */
-  name: 'Shiv Solutions',
+  /** Used in sentences: "Sign in to your ChairOS account". */
+  name: 'ChairOS',
   /** Display wordmark on the login and sign-up screens. */
-  wordmark: 'SHIV SOLUTIONS',
+  wordmark: 'ChairOS',
   /** Single-letter mark used where there is no room for the name. */
-  initial: 'S',
+  initial: 'C',
   /** What the product is, for page titles and the app manifest. */
   tagline: 'Dental Clinic Management',
   version: 'v1.0',

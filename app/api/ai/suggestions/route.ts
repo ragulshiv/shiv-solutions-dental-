@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { buildContext, serializeContext } from '@/lib/ai/context-builder'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
+import { BRAND } from '@/config/brand'
 
 function suggestionsPrompt(contextStr: string, page: string) {
-  return `You are the context-aware suggestion engine for Shiv Solutions.
+  return `You are the context-aware suggestion engine for ${BRAND.name}.
 
 Based on the current page and context, suggest 2–3 short, actionable items the user might want to do RIGHT NOW.
 

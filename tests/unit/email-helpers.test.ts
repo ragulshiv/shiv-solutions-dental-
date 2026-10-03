@@ -132,7 +132,7 @@ describe('sendVerificationEmail', () => {
 
     const html = mockSendEmail.mock.calls[0][0].body
     expect(html).toContain('<!DOCTYPE html>')
-    expect(html).toContain('Shiv Solutions')
+    expect(html).toContain('ChairOS')
     expect(html).toContain('Verify your email')
     expect(html).toContain('24 hours') // expiry note
   })

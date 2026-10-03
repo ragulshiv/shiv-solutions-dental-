@@ -15,7 +15,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 py-4 md:px-8">
-        <p className="font-serif text-lg font-semibold tracking-[0.2em] text-primary">
+        <p className="font-serif text-2xl font-bold tracking-tight text-primary">
           {BRAND.wordmark}
         </p>
       </header>
