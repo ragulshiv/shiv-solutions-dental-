@@ -19,7 +19,7 @@
   "auth": {
     "login": {
       "heading": "Welcome back",
-      "subheading": "Sign in to your Shiv Solutions account",
+      "subheading": "Sign in to your ChairOS account",
       "email": "Email",
       "password": "Password",
       "submit": "Sign in",

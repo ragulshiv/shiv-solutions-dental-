@@ -11,8 +11,8 @@
  *
  * Bump VERSION to drop every old cache on the next visit.
  */
-const VERSION = 'v1'
-const STATIC_CACHE = `shiv-static-${VERSION}`
+const VERSION = 'v2'
+const STATIC_CACHE = `chairos-static-${VERSION}`
 const SHELL = ['/offline.html', '/icon-192.png', '/icon-512.png', '/manifest.json']
 
 self.addEventListener('install', (event) => {
@@ -27,7 +27,9 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith('shiv-') && k !== STATIC_CACHE)
+            .filter(
+              (k) => (k.startsWith('chairos-') || k.startsWith('shiv-')) && k !== STATIC_CACHE
+            )
             .map((k) => caches.delete(k))
         )
       )

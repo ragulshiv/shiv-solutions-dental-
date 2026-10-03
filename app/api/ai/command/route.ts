@@ -5,6 +5,7 @@ import { buildContext, serializeContext } from '@/lib/ai/context-builder'
 import { complete, extractJSON } from '@/lib/ai/openrouter'
 import { getModelByTier } from '@/lib/ai/models'
 import { executeIntent } from '@/lib/ai/command-executors'
+import { BRAND } from '@/config/brand'
 
 // ---------------------------------------------------------------------------
 // Intent definitions — the AI outputs one of these intents
@@ -64,7 +65,7 @@ ANALYTICS:
 `.trim()
 
 function commandParserPrompt(contextStr: string, today: string) {
-  return `You are a command parser for Shiv Solutions. Parse the user's natural-language command into a structured action.
+  return `You are a command parser for ${BRAND.name}. Parse the user's natural-language command into a structured action.
 
 Available intents:
 ${INTENTS}

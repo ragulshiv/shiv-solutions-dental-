@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   ClipboardList,
 } from 'lucide-react'
+import { BRAND } from '@/config/brand'
 
 interface SetupStep {
   title: string
@@ -322,7 +323,7 @@ const setupSections: SetupSection[] = [
           'Once verified, go to Razorpay Dashboard → Settings → API Keys',
           'Click "Generate Key" — you\'ll get a Key ID (starts with "rzp_") and a Key Secret',
           "IMPORTANT: Copy the Key Secret immediately — it's shown only once!",
-          'In Shiv Solutions, go to Settings → Billing Settings → "Payment Gateway" tab',
+          `In ${BRAND.name}, go to Settings → Billing Settings → "Payment Gateway" tab`,
           'Select "Razorpay" as the gateway',
           'Paste your Key ID and Key Secret in the fields',
           'Toggle "Test Mode" ON for testing first, then switch to OFF for live payments',
@@ -353,7 +354,7 @@ const setupSections: SetupSection[] = [
           'Complete KYC and business verification',
           'Once approved, go to PhonePe Business Dashboard → Developers → API Keys',
           'Note your Merchant ID, Salt Key, and Salt Index',
-          'In Shiv Solutions, go to Settings → Billing Settings → "Payment Gateway" tab',
+          `In ${BRAND.name}, go to Settings → Billing Settings → "Payment Gateway" tab`,
           'Select "PhonePe" as the gateway',
           'Enter your Merchant ID, Salt Key, and Salt Index',
           'Toggle Test/Live mode appropriately',
@@ -375,7 +376,7 @@ const setupSections: SetupSection[] = [
           'Complete your business KYC verification',
           'Go to Paytm Business Dashboard → Developer Settings → API Keys',
           'Note your Merchant ID (MID) and Merchant Key',
-          'In Shiv Solutions, go to Settings → Billing Settings → "Payment Gateway" tab',
+          `In ${BRAND.name}, go to Settings → Billing Settings → "Payment Gateway" tab`,
           'Select "Paytm" as the gateway',
           'Enter your Merchant ID and Merchant Key',
           'Set Website to "WEBSTAGING" for testing or "DEFAULT" for live',
@@ -408,7 +409,7 @@ const setupSections: SetupSection[] = [
           'Go to MSG91 Dashboard → API → Authkey — copy your Auth Key',
           'Create a Sender ID (6 characters, e.g., "DENTAL") — this appears as the sender name',
           'Submit Sender ID for TRAI approval (takes 1-3 business days)',
-          'In Shiv Solutions, go to Settings → Communication Settings',
+          `In ${BRAND.name}, go to Settings → Communication Settings`,
           'Toggle "Enable SMS" ON',
           'Select "MSG91" as the Gateway',
           'Paste your Auth Key and approved Sender ID',
@@ -431,7 +432,7 @@ const setupSections: SetupSection[] = [
         steps: [
           'Create an account at fast2sms.com',
           'Go to Dashboard → Dev API — copy your API Key',
-          'In Shiv Solutions, go to Settings → Communication Settings',
+          `In ${BRAND.name}, go to Settings → Communication Settings`,
           'Toggle "Enable SMS" ON',
           'Select "Fast2SMS" as the Gateway',
           'Paste your API Key',
@@ -462,7 +463,7 @@ const setupSections: SetupSection[] = [
         description:
           'If you have a business email (e.g., info@yourclinic.com) through Hostinger, GoDaddy, etc.',
         steps: [
-          'In Shiv Solutions, go to Settings → Communication Settings → Email tab',
+          `In ${BRAND.name}, go to Settings → Communication Settings → Email tab`,
           'Toggle "Enable Email" ON',
           'Enter the SMTP settings from your email provider:',
           "  — SMTP Host: e.g., smtp.hostinger.com (check your email provider's documentation)",
@@ -490,9 +491,9 @@ const setupSections: SetupSection[] = [
           'Go to your Google Account settings (myaccount.google.com)',
           'Go to Security → 2-Step Verification and enable it (required for App Passwords)',
           'Go to Security → 2-Step Verification → App Passwords',
-          'Select "Mail" as the app and "Other" as the device, name it "Shiv Solutions"',
+          `Select "Mail" as the app and "Other" as the device, name it "${BRAND.name}"`,
           'Click "Generate" — Google will show a 16-character password. Copy it immediately!',
-          'In Shiv Solutions Communication Settings:',
+          `In ${BRAND.name} Communication Settings:`,
           '  — SMTP Host: smtp.gmail.com',
           '  — SMTP Port: 587',
           '  — Username: your full Gmail address',
@@ -524,12 +525,12 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Connect Google Calendar',
-        description: 'Sync your Shiv Solutions appointments to Google Calendar automatically.',
+        description: `Sync your ${BRAND.name} appointments to Google Calendar automatically.`,
         steps: [
           'Go to Settings → Integrations',
           'In the "Google Calendar" section, click "Connect Google Calendar"',
           'A Google sign-in popup will appear — sign in with the Google account you want to sync to',
-          'Grant Shiv Solutions permission to manage your calendar events',
+          `Grant ${BRAND.name} permission to manage your calendar events`,
           'Once connected, you\'ll see a "Connected" badge with your Calendar ID',
           'Toggle "Sync Status" to Enabled',
           'Click "Sync Now" to sync existing appointments',
@@ -563,7 +564,7 @@ const setupSections: SetupSection[] = [
           '  2. Click on your clinic listing',
           '  3. Click "Write a Review"',
           "  4. Copy the URL from your browser's address bar",
-          'In Shiv Solutions, go to Settings → Communication Settings → "Google Reviews" tab',
+          `In ${BRAND.name}, go to Settings → Communication Settings → "Google Reviews" tab`,
           'Paste your Google Review URL in the field',
           'Toggle "Auto-Request Reviews" ON',
           'Set "Review Request Delay" (e.g., 2 hours — sends the request 2 hours after the appointment)',
@@ -622,21 +623,20 @@ const setupSections: SetupSection[] = [
     guides: [
       {
         title: 'Get an OpenRouter API Key',
-        description:
-          "Shiv Solutions uses OpenRouter to power its AI features. You'll need an API key.",
+        description: `${BRAND.name} uses OpenRouter to power its AI features. You'll need an API key.`,
         steps: [
           'Go to openrouter.ai and create a free account',
           'Click on your profile icon → "Keys" (or go to openrouter.ai/keys)',
-          'Click "Create Key" and give it a name like "Shiv Solutions"',
+          `Click "Create Key" and give it a name like "${BRAND.name}"`,
           'Copy the API key (starts with "sk-or-")',
-          'Add this key to your Shiv Solutions environment configuration:',
+          `Add this key to your ${BRAND.name} environment configuration:`,
           "  — In your server's .env file, add: OPENROUTER_API_KEY=sk-or-your-key-here",
           '  — Restart the application after adding the key',
-          'In Shiv Solutions, go to Settings → AI Features and toggle "Enable AI" ON',
+          `In ${BRAND.name}, go to Settings → AI Features and toggle "Enable AI" ON`,
         ],
         tips: [
           'OpenRouter provides access to multiple AI models at competitive prices',
-          'Shiv Solutions uses cost-effective models — typical monthly cost is ₹100-500 for a small clinic',
+          `${BRAND.name} uses cost-effective models — typical monthly cost is ₹100-500 for a small clinic`,
           'You can set a monthly budget limit in AI Settings to control spending',
           'Start with "Economy" model and upgrade to "Quality" if needed',
         ],
@@ -692,7 +692,7 @@ const setupSections: SetupSection[] = [
           'The device will appear in the dashboard with a "Pending" status until it sends its first data',
         ],
         tips: [
-          'Each device needs an API key to send data to Shiv Solutions',
+          `Each device needs an API key to send data to ${BRAND.name}`,
           'Contact your device manufacturer for integration documentation',
           'Device data is stored securely and can be viewed in real-time from the dashboard',
           'You can deactivate a device without deleting its historical data',

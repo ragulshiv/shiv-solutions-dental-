@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { BRAND } from '@/config/brand'
 
 // Google Calendar OAuth2 and sync service
 // Uses Google Calendar API v3 via REST (no googleapis package needed)
@@ -160,7 +161,7 @@ export async function createCalendarEvent(
       `Doctor: ${appointment.doctorName}`,
       `Type: ${appointment.appointmentType}`,
       appointment.chiefComplaint ? `Chief Complaint: ${appointment.chiefComplaint}` : '',
-      `\nManaged by Shiv Solutions`,
+      `\nManaged by ${BRAND.name}`,
     ]
       .filter(Boolean)
       .join('\n'),

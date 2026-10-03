@@ -1,7 +1,7 @@
 {
   "id": "/dashboard",
-  "name": "Shiv Solutions - Dental Clinic Management",
-  "short_name": "Shiv Solutions",
+  "name": "ChairOS - Dental Clinic Management",
+  "short_name": "ChairOS",
   "description": "Dental clinic management: patients, appointments, billing and more.",
   "start_url": "/dashboard",
   "scope": "/",

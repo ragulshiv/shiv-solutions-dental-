@@ -1,7 +1,7 @@
 # CLAUDE.md: how this project is put together
 
 Dental clinic management system for Indian clinics: patients, appointments, treatments, billing (GST), inventory, CRM, lab, video consults, a patient portal, and AI helpers.
-Product: **Shiv Solutions** (name, wordmark and version live in `config/brand.ts`; never hard-code the product name). Started from the MIT-licensed `abinauv/dental-erp`: its licence must stay in `licenses/dental-erp-MIT.txt` and `NOTICE.md`. Everything else is ours.
+Product: **ChairOS** (name, wordmark and version live in `config/brand.ts`; never hard-code the product name). Started from the MIT-licensed `abinauv/dental-erp`: its licence must stay in `licenses/dental-erp-MIT.txt` and `NOTICE.md`. Everything else is ours.
 
 ## Stack
 
