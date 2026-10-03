@@ -17,23 +17,28 @@ import {
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { formatTime } from '@/lib/appointment-utils'
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
+import dynamic from 'next/dynamic'
 import { InsightsPanel } from '@/components/ai/insights-panel'
-import { CHART_COLORS } from '@/lib/chart-theme'
+
+// Charts load after the first paint (the chart library is ~120 KB compressed);
+// the stat cards and appointments render without waiting for it.
+const chartPlaceholder = () => <div className="h-[300px] animate-pulse rounded-md bg-muted/50" />
+const RevenueLineChart = dynamic(
+  () => import('@/components/dashboard/dashboard-charts').then((m) => m.RevenueLineChart),
+  { ssr: false, loading: chartPlaceholder }
+)
+const AppointmentStatusPie = dynamic(
+  () => import('@/components/dashboard/dashboard-charts').then((m) => m.AppointmentStatusPie),
+  { ssr: false, loading: chartPlaceholder }
+)
+const MonthlyRevenueBarChart = dynamic(
+  () => import('@/components/dashboard/dashboard-charts').then((m) => m.MonthlyRevenueBarChart),
+  { ssr: false, loading: chartPlaceholder }
+)
+const TopProceduresBarChart = dynamic(
+  () => import('@/components/dashboard/dashboard-charts').then((m) => m.TopProceduresBarChart),
+  { ssr: false, loading: chartPlaceholder }
+)
 
 interface DashboardStats {
   overview: {
@@ -268,32 +273,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="pl-2">
             {stats.charts.last7DaysRevenue && stats.charts.last7DaysRevenue.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart
-                  data={stats.charts.last7DaysRevenue.map((item: any) => ({
-                    date: format(new Date(item.date), 'MMM dd'),
-                    revenue: Number(item.revenue),
-                  }))}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value) => (typeof value === 'number' ? formatCurrency(value) : '')}
-                    labelStyle={{ color: 'inherit' }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                    name="Revenue"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <RevenueLineChart
+                data={stats.charts.last7DaysRevenue}
+                formatCurrency={formatCurrency}
+              />
             ) : (
               <p className="text-muted-foreground text-center py-8">No revenue data available</p>
             )}
@@ -344,34 +327,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {stats.charts.appointmentsByStatus && stats.charts.appointmentsByStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={stats.charts.appointmentsByStatus.map((item: any) => ({
-                      name: item.status,
-                      value: item.count,
-                    }))}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`
-                    }
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {stats.charts.appointmentsByStatus.map((_: unknown, index: number) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={CHART_COLORS[index % CHART_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <AppointmentStatusPie data={stats.charts.appointmentsByStatus} />
             ) : (
               <p className="text-muted-foreground text-center py-8">
                 No appointment data available
@@ -388,24 +344,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {stats.charts.last6MonthsRevenue && stats.charts.last6MonthsRevenue.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={stats.charts.last6MonthsRevenue.map((item: any) => ({
-                    month: item.month,
-                    revenue: Number(item.revenue),
-                  }))}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value) => (typeof value === 'number' ? formatCurrency(value) : '')}
-                  />
-                  <Legend />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" />
-                </BarChart>
-              </ResponsiveContainer>
+              <MonthlyRevenueBarChart
+                data={stats.charts.last6MonthsRevenue}
+                formatCurrency={formatCurrency}
+              />
             ) : (
               <p className="text-muted-foreground text-center py-8">No revenue data available</p>
             )}
@@ -423,34 +365,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {stats.charts.topProcedures && stats.charts.topProcedures.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={stats.charts.topProcedures.map((proc: any) => ({
-                    name: proc.name.length > 20 ? proc.name.substring(0, 20) + '...' : proc.name,
-                    count: Number(proc.count),
-                    revenue: Number(proc.revenue),
-                  }))}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
-                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                  <Tooltip
-                    formatter={(value, _name, item) => {
-                      if (typeof value !== 'number') return ''
-                      // Match on dataKey, not name: the <Bar> sets a display
-                      // name ("Revenue (₹)"), and that is what recharts passes
-                      // as `name`, so comparing it to 'revenue' never matched.
-                      if (item?.dataKey === 'revenue') return formatCurrency(value)
-                      return value
-                    }}
-                  />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="Count" />
-                  <Bar yAxisId="right" dataKey="revenue" fill="#82ca9d" name="Revenue (₹)" />
-                </BarChart>
-              </ResponsiveContainer>
+              <TopProceduresBarChart
+                data={stats.charts.topProcedures}
+                formatCurrency={formatCurrency}
+              />
             ) : (
               <p className="text-muted-foreground text-center py-8">No procedure data available</p>
             )}

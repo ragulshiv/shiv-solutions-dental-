@@ -3,6 +3,7 @@ import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { Providers } from '@/components/providers'
+import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 import { BRAND } from '@/config/brand'
 
 // Body text: IBM Plex Sans (clear at small sizes, good figures for billing tables).
@@ -29,6 +30,10 @@ export const metadata: Metadata = {
   authors: [{ name: BRAND.name }],
   creator: BRAND.name,
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon-32.png',
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_IN',
@@ -48,7 +53,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#11606A',
+  themeColor: '#111c33',
   width: 'device-width',
   initialScale: 1,
 }
@@ -60,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
           <Toaster />
+          <ServiceWorkerRegister />
         </Providers>
       </body>
     </html>

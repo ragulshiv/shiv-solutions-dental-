@@ -92,6 +92,9 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - api/health and api/ready — the liveness and readiness probes.
+     * - The installable-app files (manifest, service worker, offline page,
+     *   icons). Phones fetch these before anyone is logged in; routing them
+     *   through auth would hand back the login page and installing would fail.
      *
      * The probes are excluded here rather than allowed through the handler so
      * that they never invoke auth() at all. An orchestrator polls these every
@@ -100,6 +103,6 @@ export const config = {
      * a fault in auth would take the health check down with it — exactly when
      * an accurate health signal matters most.
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/health|api/ready).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api/health|api/ready|manifest.json|sw.js|offline.html|icon-|apple-touch-icon|favicon-32).*)',
   ],
 }

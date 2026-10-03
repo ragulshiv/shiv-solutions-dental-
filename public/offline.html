@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111c33" />
+    <title>Offline | Shiv Solutions</title>
+    <style>
+      :root {
+        --bg: #f9f7f3;
+        --ink: #0f1a2e;
+        --muted: #4a5568;
+        --teal: #11606a;
+        --card: #ffffff;
+        --border: #e2ddd3;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c111b;
+          --ink: #f2efe9;
+          --muted: #a9b1be;
+          --teal: #3fc1b8;
+          --card: #121a28;
+          --border: #263042;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      .card {
+        width: 100%;
+        max-width: 380px;
+        padding: 32px 24px;
+        text-align: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+      .mark {
+        font-family: Georgia, serif;
+        letter-spacing: 0.2em;
+        font-weight: 700;
+        color: var(--teal);
+        font-size: 14px;
+        margin: 0 0 20px;
+      }
+      h1 {
+        font-family: Georgia, serif;
+        font-size: 22px;
+        margin: 0 0 8px;
+      }
+      p {
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0 0 20px;
+        font-size: 15px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--teal);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="mark">SHIV SOLUTIONS</p>
+      <h1>Can't reach the clinic server</h1>
+      <p>
+        Check your internet connection. If you're connecting through Tailscale, make sure it's
+        switched on.
+      </p>
+      <button onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>
