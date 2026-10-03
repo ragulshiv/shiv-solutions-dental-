@@ -1,4 +1,5 @@
 import { BRAND } from '@/config/brand'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +8,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <p className="mb-6 font-serif text-lg font-semibold tracking-[0.2em] text-primary">
           {BRAND.wordmark}
         </p>
-        <div className="w-full max-w-md px-4">{children}</div>
+        <div className="w-full max-w-md space-y-4 px-4">
+          {children}
+          <InstallAppButton variant="full" />
+        </div>
       </div>
     </div>
   )

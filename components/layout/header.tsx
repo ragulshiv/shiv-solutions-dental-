@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GlobalSearch } from './global-search'
 import { ThemeToggle } from './theme-toggle'
 import { useSidebar } from './sidebar-context'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 
 const UserMenu = dynamic(() => import('./user-menu').then((m) => m.UserMenu), {
   ssr: false,
@@ -44,6 +45,9 @@ export function Header({ user }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
+        {/* Install as an app (only shows when the browser supports it) */}
+        <InstallAppButton />
+
         {/* Theme toggle */}
         <ThemeToggle />
 

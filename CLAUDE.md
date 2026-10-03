@@ -29,6 +29,13 @@ Next.js 16 (App Router) · TypeScript · Prisma 5 + MySQL 8.4 · NextAuth v5 · 
 
 Each clinic is a `Hospital` row. A clinic owner creates one at `/signup` (clinic name + admin login), verifies their email, then finishes `/onboarding`. Every staff user, patient and record carries `hospitalId`, so clinics never see each other's data. Admins add their own staff from Staff → Invite. The clinic's name and logo are set in Settings → Clinic and show in the sidebar.
 
+## Installable app (PWA) and load speed
+
+- `public/manifest.json` + icons (`public/icon-*.png`, made from the navy/teal "S" mark) make the site installable: Android Chrome shows "Install", iPhone uses Share → Add to Home Screen. `components/pwa/install-app-button.tsx` shows the button (header + login/sign-up screens) only where installing is possible.
+- `public/sw.js` caches only hashed build files and icons, **never pages or `/api/`** (patient data stays server-side). Bump its `VERSION` if you change icons or the caching rules. It is registered in production only (`components/pwa/service-worker-register.tsx`).
+- Installing requires https: the Tailscale URL or a real domain. `middleware.ts` lets these files through without login.
+- Heavy libraries load on demand: dashboard charts live in `components/dashboard/dashboard-charts.tsx` and are imported with `next/dynamic`. Do the same for any new heavy widget so it doesn't slow the first screen.
+
 ## Patterns to follow
 
 **API route.** Every handler starts with the guard and scopes every query by `hospitalId` (multi-tenant):

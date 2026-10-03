@@ -46,6 +46,15 @@ const nextConfig = {
         ],
       },
       {
+        // The service worker must never be cached by the browser, or phones
+        // would keep running an old version of it after a deploy.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+        ],
+      },
+      {
         // Security headers for all routes
         source: '/(.*)',
         headers: [
