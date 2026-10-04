@@ -3,6 +3,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { StaffInviteStatus, Role } from '@prisma/client'
+import { stripDoctorPrefix } from '@/lib/utils'
 
 const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Token is required'),
@@ -101,8 +102,12 @@ export async function POST(request: Request) {
           staff: {
             create: {
               employeeId,
-              firstName: (invite.name ?? invite.email.split('@')[0]).split(' ')[0],
-              lastName: (invite.name ?? '').split(' ').slice(1).join(' ') || '',
+              firstName: stripDoctorPrefix(invite.name ?? invite.email.split('@')[0]).split(' ')[0],
+              lastName:
+                stripDoctorPrefix(invite.name ?? '')
+                  .split(' ')
+                  .slice(1)
+                  .join(' ') || '',
               email: invite.email,
               phone,
               hospitalId: invite.hospitalId,

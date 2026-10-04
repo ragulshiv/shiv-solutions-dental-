@@ -26,6 +26,10 @@ vi.mock('@/lib/billing-utils', () => ({
 // Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    // A treatment can only be on one bill: the route checks for an existing line
+    invoiceItem: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
     invoice: {
       findFirst: vi.fn(),
       findMany: vi.fn(),

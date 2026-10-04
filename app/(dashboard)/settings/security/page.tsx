@@ -11,6 +11,7 @@ import { Shield, Lock, Clock, UserX, AlertTriangle } from 'lucide-react'
 import { AuditMonitor } from '@/components/ai/audit-monitor'
 import { useToast } from '@/hooks/use-toast'
 import { Textarea } from '@/components/ui/textarea'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 export default function SecuritySettingsPage() {
   const { toast } = useToast()
@@ -380,7 +381,9 @@ export default function SecuritySettingsPage() {
         {/* Audit Log Intelligence */}
         <Card>
           <CardContent className="pt-6">
-            <AuditMonitor />
+            <AiOnly>
+              <AuditMonitor />
+            </AiOnly>
           </CardContent>
         </Card>
 

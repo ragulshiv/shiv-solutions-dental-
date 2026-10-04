@@ -171,6 +171,7 @@ describe('Appointments API - POST /api/appointments', () => {
       hospitalId: 'hospital-1',
     } as any)
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue(null) // No conflict
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([] as any)
     vi.mocked(prisma.appointment.create).mockResolvedValue({
       id: 'new-apt-id',
       appointmentNo: 'APT202501150001',
@@ -276,11 +277,10 @@ describe('Appointments API - POST /api/appointments', () => {
       id: 'doctor-1',
       hospitalId: 'hospital-1',
     } as any)
-    vi.mocked(prisma.appointment.findFirst).mockResolvedValue({
-      id: 'existing-apt',
-      scheduledDate: new Date('2030-06-15'),
-      scheduledTime: '09:00',
-    } as any)
+    // Same doctor, same day: an existing 09:00 booking (overlap check reads the whole day)
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([
+      { scheduledTime: '09:00', duration: 30, patient: { firstName: 'Ravi', lastName: 'K' } },
+    ] as any)
 
     const request = new NextRequest('http://localhost:3000/api/appointments', {
       method: 'POST',
@@ -308,6 +308,7 @@ describe('Appointments API - POST /api/appointments', () => {
       hospitalId: 'hospital-1',
     } as any)
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue(null)
+    vi.mocked(prisma.appointment.findMany).mockResolvedValue([] as any)
     vi.mocked(prisma.appointment.create).mockRejectedValue(new Error('Database error'))
 
     const request = new NextRequest('http://localhost:3000/api/appointments', {

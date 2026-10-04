@@ -271,7 +271,7 @@ describe('8.1 CRUD Operations', () => {
         id: PATIENT_ID,
         firstName: 'Jane',
         lastName: 'Smith',
-        phone: '1112223333',
+        phone: '9112223333',
         hospitalId: HOSPITAL_A,
       })
 
@@ -280,7 +280,7 @@ describe('8.1 CRUD Operations', () => {
         body: JSON.stringify({
           firstName: 'Jane',
           lastName: 'Smith',
-          phone: '1112223333',
+          phone: '9112223333',
           gender: 'FEMALE',
         }),
       })
@@ -292,7 +292,7 @@ describe('8.1 CRUD Operations', () => {
           data: expect.objectContaining({
             firstName: 'Jane',
             lastName: 'Smith',
-            phone: '1112223333',
+            phone: '9112223333',
           }),
         })
       )
@@ -551,7 +551,7 @@ describe('8.2 Data Consistency', () => {
         body: JSON.stringify({
           firstName: 'Test',
           lastName: 'Patient',
-          phone: '5551234567',
+          phone: '9551234567',
           gender: 'MALE',
         }),
       })
@@ -750,7 +750,7 @@ describe('8.2 Data Consistency', () => {
   // ── Unique Constraints ─────────────────────────────────────────────────────
 
   describe('Unique Constraints', () => {
-    it('Duplicate phone in same hospital — returns 409 conflict', async () => {
+    it('Shared phone in same hospital (family) — allowed', async () => {
       // Simulate existing patient with same phone
       prismaMock.patient.findFirst.mockResolvedValue({
         id: 'existing-patient',
@@ -767,19 +767,18 @@ describe('8.2 Data Consistency', () => {
           gender: 'MALE',
         }),
       })
+      prismaMock.patient.create.mockResolvedValue({ id: 'family-member', hospitalId: HOSPITAL_A })
       const res = await createPatient(req)
 
-      // Should reject with 409 conflict
-      expect(res.status).toBe(409)
-      const body = await res.json()
-      expect(body.error).toContain('already exists')
+      // Family members often share one mobile number
+      expect(res.status).toBe(201)
     })
 
     it('Duplicate phone in different hospital — allowed (no conflict)', async () => {
       prismaMock.patient.findFirst.mockResolvedValue(null) // no dup in THIS hospital
       prismaMock.patient.create.mockResolvedValue({
         id: 'p-diff-hosp',
-        phone: '5554443322',
+        phone: '9554443322',
         hospitalId: HOSPITAL_A,
       })
 
@@ -788,7 +787,7 @@ describe('8.2 Data Consistency', () => {
         body: JSON.stringify({
           firstName: 'Cross',
           lastName: 'Hospital',
-          phone: '5554443322',
+          phone: '9554443322',
           gender: 'FEMALE',
         }),
       })
@@ -799,7 +798,7 @@ describe('8.2 Data Consistency', () => {
       expect(prismaMock.patient.create).toHaveBeenCalled()
     })
 
-    it('Phone duplicate check uses hospitalId scoping', async () => {
+    it('Patient number lookup uses hospitalId scoping', async () => {
       prismaMock.patient.findFirst.mockResolvedValue(null)
       prismaMock.patient.create.mockResolvedValue({ id: 'p-scope' })
 
@@ -808,13 +807,13 @@ describe('8.2 Data Consistency', () => {
         body: JSON.stringify({
           firstName: 'Scope',
           lastName: 'Test',
-          phone: '1231231234',
+          phone: '9231231234',
           gender: 'MALE',
         }),
       })
       await createPatient(req)
 
-      // findFirst for duplicate check should include hospitalId
+      // The next patient number is looked up within this clinic only
       const findFirstCall = prismaMock.patient.findFirst.mock.calls[0]?.[0]
       expect(findFirstCall?.where?.hospitalId).toBe(HOSPITAL_A)
     })

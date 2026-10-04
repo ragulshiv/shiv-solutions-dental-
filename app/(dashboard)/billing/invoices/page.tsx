@@ -54,7 +54,8 @@ import { invoiceStatusConfig, formatCurrency, formatDate, getDueDays } from '@/l
 interface Invoice {
   id: string
   invoiceNo: string
-  invoiceDate: string
+  invoiceDate?: string
+  createdAt: string
   dueDate: string | null
   subtotal: string | number
   discountAmount: string | number
@@ -302,7 +303,7 @@ export default function InvoicesPage() {
                       <TableCell>
                         <div className="font-medium">{invoice.invoiceNo}</div>
                         <div className="text-sm text-muted-foreground">
-                          {formatDate(invoice.invoiceDate)}
+                          {formatDate(invoice.invoiceDate || invoice.createdAt)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -368,10 +369,10 @@ export default function InvoicesPage() {
                             </DropdownMenuItem>
                             {invoice.status === 'DRAFT' && (
                               <DropdownMenuItem
-                                onClick={() => router.push(`/billing/invoices/${invoice.id}/edit`)}
+                                onClick={() => router.push(`/billing/invoices/${invoice.id}`)}
                               >
                                 <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                Issue or cancel draft
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />

@@ -46,7 +46,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : undefined
 
   return (
-    <DashboardShell user={user} hospital={hospitalInfo}>
+    <DashboardShell
+      user={user}
+      hospital={hospitalInfo}
+      aiEnabled={Boolean(process.env.OPENROUTER_API_KEY?.trim())}
+    >
       {children}
     </DashboardShell>
   )

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   try {
-    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
+    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST', 'DOCTOR'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

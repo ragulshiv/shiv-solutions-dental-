@@ -225,3 +225,78 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
+
+/*
+ * Dark-mode safety net. Many older screens use fixed light tints (bg-green-50,
+ * text-green-700, …) that turn into light-on-light text in dark mode. These
+ * low-specificity rules swap them for translucent tints and lighter text.
+ * Any explicit `dark:` class on an element still wins (higher specificity).
+ */
+:where(.dark) .bg-green-50,
+:where(.dark) .bg-green-100,
+:where(.dark) .bg-emerald-50,
+:where(.dark) .bg-emerald-100 {
+  background-color: rgb(16 185 129 / 0.14);
+}
+:where(.dark) .bg-red-50,
+:where(.dark) .bg-red-100,
+:where(.dark) .bg-rose-50,
+:where(.dark) .bg-pink-50,
+:where(.dark) .bg-pink-100 {
+  background-color: rgb(244 63 94 / 0.14);
+}
+:where(.dark) .bg-blue-50,
+:where(.dark) .bg-blue-100,
+:where(.dark) .bg-sky-50,
+:where(.dark) .bg-indigo-50 {
+  background-color: rgb(56 189 248 / 0.14);
+}
+:where(.dark) .bg-amber-50,
+:where(.dark) .bg-amber-100,
+:where(.dark) .bg-yellow-50,
+:where(.dark) .bg-yellow-100,
+:where(.dark) .bg-orange-50,
+:where(.dark) .bg-orange-100 {
+  background-color: rgb(245 158 11 / 0.14);
+}
+:where(.dark) .bg-purple-50,
+:where(.dark) .bg-purple-100 {
+  background-color: rgb(168 85 247 / 0.14);
+}
+:where(.dark) .bg-teal-50 {
+  background-color: rgb(20 184 166 / 0.14);
+}
+:where(.dark) .text-green-600,
+:where(.dark) .text-green-700,
+:where(.dark) .text-green-800,
+:where(.dark) .text-emerald-700 {
+  color: rgb(110 231 183);
+}
+:where(.dark) .text-red-600,
+:where(.dark) .text-red-700,
+:where(.dark) .text-red-800 {
+  color: rgb(253 164 175);
+}
+:where(.dark) .text-blue-600,
+:where(.dark) .text-blue-700,
+:where(.dark) .text-blue-800 {
+  color: rgb(125 211 252);
+}
+:where(.dark) .text-amber-600,
+:where(.dark) .text-amber-700,
+:where(.dark) .text-amber-800,
+:where(.dark) .text-yellow-700,
+:where(.dark) .text-yellow-800,
+:where(.dark) .text-orange-700 {
+  color: rgb(252 211 77);
+}
+:where(.dark) .text-purple-700 {
+  color: rgb(216 180 254);
+}
+:where(.dark) .border-green-200,
+:where(.dark) .border-red-200,
+:where(.dark) .border-blue-200,
+:where(.dark) .border-amber-200,
+:where(.dark) .border-yellow-200 {
+  border-color: hsl(var(--border));
+}

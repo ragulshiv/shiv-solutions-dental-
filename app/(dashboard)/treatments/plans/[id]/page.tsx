@@ -51,6 +51,7 @@ import {
 
 interface TreatmentPlanItem {
   id: string
+  treatmentId?: string | null
   priority: number
   toothNumbers: string | null
   estimatedCost: string | number
@@ -358,14 +359,23 @@ export default function TreatmentPlanDetailPage({ params }: { params: Promise<{ 
                       <TableCell>{formatCurrency(item.estimatedCost)}</TableCell>
                       <TableCell>{getItemStatusBadge(item.status)}</TableCell>
                       <TableCell>
-                        {item.status === 'PENDING' && plan.status === 'IN_PROGRESS' && (
-                          <Link
-                            href={`/treatments/new?patientId=${plan.patient.id}&procedureId=${item.procedure.id}`}
-                          >
-                            <Button size="sm" variant="outline">
-                              Start
+                        {item.treatmentId ? (
+                          <Link href={`/treatments/${item.treatmentId}`}>
+                            <Button size="sm" variant="ghost">
+                              View treatment
                             </Button>
                           </Link>
+                        ) : (
+                          item.status === 'PENDING' &&
+                          ['ACCEPTED', 'IN_PROGRESS'].includes(plan.status) && (
+                            <Link
+                              href={`/treatments/new?patientId=${plan.patient.id}&procedureId=${item.procedure.id}&planItemId=${item.id}${item.toothNumbers ? `&teeth=${encodeURIComponent(item.toothNumbers)}` : ''}&cost=${item.estimatedCost}`}
+                            >
+                              <Button size="sm" variant="outline">
+                                Do today
+                              </Button>
+                            </Link>
+                          )
                         )}
                       </TableCell>
                     </TableRow>

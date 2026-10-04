@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getNavigationForRole } from '@/config/nav'
+import { useAiEnabled, AI_ONLY_PATHS } from '@/components/ai/ai-enabled'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useSidebar } from './sidebar-context'
@@ -19,7 +20,8 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ role, hospitalName, hospitalLogo }: MobileSidebarProps) {
   const pathname = usePathname()
-  const navigation = getNavigationForRole(role)
+  const aiEnabled = useAiEnabled()
+  const navigation = getNavigationForRole(role, aiEnabled ? [] : AI_ONLY_PATHS)
   const { mobileOpen, setMobileOpen } = useSidebar()
 
   // Close on route change

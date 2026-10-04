@@ -122,14 +122,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Update items if provided
     if (body.items !== undefined) {
-      // Delete existing items
-      await prisma.treatmentPlanItem.deleteMany({
-        where: { treatmentPlanId: id },
-      })
-
       // Calculate new estimated cost and duration
       let estimatedCost = 0
       let estimatedDuration = 0
+      let procedureMap = new Map<string, any>()
 
       if (body.items.length > 0) {
         const procedures = await prisma.procedure.findMany({
@@ -139,7 +135,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           },
         })
 
-        const procedureMap = new Map(procedures.map((p) => [p.id, p]))
+        procedureMap = new Map(procedures.map((p) => [p.id, p]))
+        const unknown = body.items.find((item: any) => !procedureMap.has(item.procedureId))
+        if (unknown) {
+          return NextResponse.json({ error: 'One or more procedures not found' }, { status: 404 })
+        }
 
         body.items.forEach((item: any) => {
           const proc = procedureMap.get(item.procedureId)
@@ -153,16 +153,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updateData.estimatedCost = estimatedCost
       updateData.estimatedDuration = estimatedDuration
 
-      // Create new items
+      // Replace the items only after every procedure checked out
+      await prisma.treatmentPlanItem.deleteMany({
+        where: { treatmentPlanId: id },
+      })
       await prisma.treatmentPlanItem.createMany({
         data: body.items.map((item: any, index: number) => ({
           treatmentPlanId: id,
           procedureId: item.procedureId,
           toothNumbers: item.toothNumbers || null,
           priority: item.priority || index + 1,
-          estimatedCost: item.estimatedCost || 0,
+          estimatedCost:
+            item.estimatedCost || Number(procedureMap.get(item.procedureId)?.basePrice ?? 0),
           notes: item.notes || null,
           status: item.status || 'PENDING',
+          treatmentId: item.treatmentId || null,
         })),
       })
     }

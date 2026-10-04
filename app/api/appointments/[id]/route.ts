@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { handleCancellationWaitlist } from '@/lib/services/smart-scheduler'
+import { findDoctorOverlap, statusChangeError } from '@/lib/appointment-rules'
 
 // GET - Get single appointment
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -73,6 +74,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       chiefComplaint,
       notes,
       doctorId,
+      clinicalNotes,
     } = body
 
     // Check if appointment exists and belongs to this hospital
@@ -98,7 +100,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (priority !== undefined) updateData.priority = priority
     if (chiefComplaint !== undefined) updateData.chiefComplaint = chiefComplaint
     if (notes !== undefined) updateData.notes = notes
+    if (clinicalNotes !== undefined) updateData.clinicalNotes = clinicalNotes
     if (doctorId !== undefined) updateData.doctorId = doctorId
+
+    if (status !== undefined) {
+      const statusError = statusChangeError(existingAppointment.status, status)
+      if (statusError) {
+        return NextResponse.json({ error: statusError }, { status: 400 })
+      }
+    }
+
+    // Rescheduling can't move a visit into the past (same rule as booking)
+    if (scheduledDate !== undefined) {
+      const newDate = new Date(scheduledDate)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (isNaN(newDate.getTime()) || newDate < today) {
+        return NextResponse.json(
+          { error: 'Cannot move an appointment into the past' },
+          { status: 400 }
+        )
+      }
+    }
 
     // If rescheduling, check for conflicts
     if (
@@ -110,24 +133,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const checkTime = scheduledTime || existingAppointment.scheduledTime
       const checkDoctorId = doctorId || existingAppointment.doctorId
 
-      const conflictingAppointment = await prisma.appointment.findFirst({
-        where: {
-          hospitalId,
-          id: { not: id },
-          doctorId: checkDoctorId,
-          scheduledDate: checkDate,
-          scheduledTime: checkTime,
-          status: {
-            notIn: ['CANCELLED', 'NO_SHOW', 'RESCHEDULED'],
-          },
-        },
+      const overlap = await findDoctorOverlap({
+        hospitalId,
+        doctorId: checkDoctorId,
+        date: checkDate,
+        time: checkTime,
+        duration: duration ?? existingAppointment.duration ?? 30,
+        excludeId: id,
       })
-
-      if (conflictingAppointment) {
-        return NextResponse.json(
-          { error: 'Doctor already has an appointment at this time' },
-          { status: 409 }
-        )
+      if (overlap) {
+        return NextResponse.json({ error: overlap }, { status: 409 })
       }
     }
 
@@ -205,7 +220,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, hospitalId } = await requireAuthAndRole()
+  // Deleting a booking is a front-desk / admin action
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN', 'RECEPTIONIST'])
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

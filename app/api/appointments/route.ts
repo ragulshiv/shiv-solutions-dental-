@@ -2,31 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
 import { createRoom } from '@/lib/services/video.service'
-
-// Generate unique appointment number for the hospital
-async function generateAppointmentNo(hospitalId: string): Promise<string> {
-  const today = new Date()
-  const prefix = `APT${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`
-
-  const lastAppointment = await prisma.appointment.findFirst({
-    where: {
-      hospitalId,
-      appointmentNo: {
-        startsWith: prefix,
-      },
-    },
-    orderBy: {
-      appointmentNo: 'desc',
-    },
-  })
-
-  if (lastAppointment) {
-    const lastNumber = parseInt(lastAppointment.appointmentNo.slice(-4))
-    return `${prefix}${String(lastNumber + 1).padStart(4, '0')}`
-  }
-
-  return `${prefix}0001`
-}
+import {
+  findDoctorOverlap,
+  outsideClinicHours,
+  generateAppointmentNo,
+} from '@/lib/appointment-rules'
 
 // GET - List appointments with filters
 export async function GET(request: NextRequest) {
@@ -185,6 +165,7 @@ export async function POST(request: NextRequest) {
       chiefComplaint,
       notes,
       isVirtual = false,
+      walkIn = false,
     } = body
 
     // Validate required fields
@@ -239,25 +220,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     }
 
-    // Check for conflicting appointments (same doctor, same time, same hospital)
+    // Overlap check uses the visit length, not just the exact start time.
+    // Walk-ins skip it: they join today's queue and wait for the doctor.
     const appointmentDate = new Date(scheduledDate)
-    const existingAppointment = await prisma.appointment.findFirst({
-      where: {
-        hospitalId,
-        doctorId,
-        scheduledDate: appointmentDate,
-        scheduledTime,
-        status: {
-          notIn: ['CANCELLED', 'NO_SHOW', 'RESCHEDULED'],
-        },
-      },
-    })
-
-    if (existingAppointment) {
-      return NextResponse.json(
-        { error: 'Doctor already has an appointment at this time' },
-        { status: 409 }
-      )
+    const overlap = walkIn
+      ? null
+      : await findDoctorOverlap({
+          hospitalId,
+          doctorId,
+          date: appointmentDate,
+          time: scheduledTime,
+          duration: duration || 30,
+        })
+    if (overlap) {
+      return NextResponse.json({ error: overlap }, { status: 409 })
+    }
+    const hoursError = walkIn
+      ? null
+      : await outsideClinicHours(hospitalId, scheduledTime, duration || 30, priority)
+    if (hoursError) {
+      return NextResponse.json({ error: hoursError }, { status: 400 })
     }
 
     // Generate appointment number for this hospital
@@ -279,7 +261,10 @@ export async function POST(request: NextRequest) {
         chiefComplaint,
         notes,
         isVirtual: !!isVirtual,
-        status: 'SCHEDULED',
+        // A walk-in is already at the clinic: put them straight into the queue
+        ...(walkIn
+          ? { status: 'CHECKED_IN' as const, checkedInAt: new Date(), waitTime: 0 }
+          : { status: 'SCHEDULED' as const }),
       },
       include: {
         patient: {

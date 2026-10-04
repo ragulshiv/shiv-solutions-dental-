@@ -24,7 +24,6 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [showAddModal, setShowAddModal] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -95,12 +94,12 @@ export default function SuppliersPage() {
           >
             Back to Inventory
           </Link>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          <Link
+            href="/inventory/suppliers/new"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
           >
             + Add Supplier
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -249,25 +248,6 @@ export default function SuppliersPage() {
           </>
         )}
       </div>
-
-      {/* Add Supplier Modal - Placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">Add New Supplier</h2>
-            <p className="text-muted-foreground mb-4">
-              Supplier form will be implemented here. For now, please use the API directly or create
-              a dedicated page.
-            </p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="px-4 py-2 bg-muted-foreground text-background rounded-lg hover:bg-muted-foreground/80"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

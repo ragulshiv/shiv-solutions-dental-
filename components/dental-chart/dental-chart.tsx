@@ -27,6 +27,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import {
+  toothNumbers,
+  toothNames,
+  primaryToothNumbers,
+  dentitionForAge,
+  type Dentition,
+} from '@/lib/treatment-utils'
 
 interface DentalChartEntry {
   id: string
@@ -46,6 +53,8 @@ interface DentalChartEntry {
 
 interface DentalChartProps {
   patientId: string
+  /** Picks the default chart: milk teeth for young children. */
+  patientAge?: number | null
 }
 
 const TOOTH_CONDITIONS = [
@@ -70,10 +79,8 @@ const SEVERITY_LEVELS = [
 ]
 
 // FDI notation tooth positions
-const UPPER_RIGHT = [18, 17, 16, 15, 14, 13, 12, 11]
-const UPPER_LEFT = [21, 22, 23, 24, 25, 26, 27, 28]
-const LOWER_LEFT = [31, 32, 33, 34, 35, 36, 37, 38]
-const LOWER_RIGHT = [48, 47, 46, 45, 44, 43, 42, 41]
+const ADULT = toothNumbers
+const PRIMARY = primaryToothNumbers
 
 const TOOTH_NAMES: Record<number, string> = {
   // Upper right
@@ -175,7 +182,7 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
         <TooltipContent>
           <div className="text-sm">
             <p className="font-semibold">
-              {number} - {TOOTH_NAMES[number]}
+              {number} - {TOOTH_NAMES[number] || toothNames[number]}
             </p>
             <p className={`${isMissing ? 'text-muted-foreground' : ''}`}>
               {getConditionLabel(condition)}
@@ -193,8 +200,10 @@ function Tooth({ number, entries, onClick, isUpper }: ToothProps) {
   )
 }
 
-export function DentalChart({ patientId }: DentalChartProps) {
+export function DentalChart({ patientId, patientAge }: DentalChartProps) {
   const { toast } = useToast()
+  const [dentition, setDentition] = useState<Dentition>(dentitionForAge(patientAge))
+  useEffect(() => setDentition(dentitionForAge(patientAge)), [patientAge])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [chartData, setChartData] = useState<Record<number, DentalChartEntry[]>>({})
@@ -336,6 +345,29 @@ export function DentalChart({ patientId }: DentalChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Adult / child / mixed teeth */}
+        <div
+          className="mb-4 inline-flex rounded-lg border p-1"
+          role="group"
+          aria-label="Teeth shown"
+        >
+          {(['adult', 'mixed', 'child'] as Dentition[]).map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDentition(d)}
+              aria-pressed={dentition === d}
+              className={`min-h-9 rounded-md px-3 text-sm font-medium ${
+                dentition === d
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {d === 'adult' ? 'Adult' : d === 'child' ? 'Milk teeth' : 'Mixed'}
+            </button>
+          ))}
+        </div>
+
         {/* Legend */}
         <div className="mb-6 flex flex-wrap gap-2">
           {TOOTH_CONDITIONS.map((condition) => (
@@ -347,72 +379,56 @@ export function DentalChart({ patientId }: DentalChartProps) {
         </div>
 
         {/* Dental Chart Grid */}
-        <div className="relative bg-gradient-to-b from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20 rounded-xl p-6">
+        <div className="relative overflow-x-auto bg-gradient-to-b from-pink-50 to-pink-100 dark:from-pink-950/20 dark:to-pink-900/20 rounded-xl p-3 md:p-6">
           {/* Upper jaw label */}
           <div className="text-center mb-2 text-sm font-medium text-muted-foreground">
             Upper Jaw (Maxilla)
           </div>
 
-          {/* Upper teeth row */}
-          <div className="flex justify-center gap-1 mb-4">
-            <div className="flex gap-1">
-              {UPPER_RIGHT.map((num) => (
-                <Tooth
-                  key={num}
-                  number={num}
-                  entries={chartData[num] || []}
-                  onClick={handleToothClick}
-                  isUpper={true}
-                />
-              ))}
-            </div>
-            <div className="w-4" /> {/* Center gap */}
-            <div className="flex gap-1">
-              {UPPER_LEFT.map((num) => (
-                <Tooth
-                  key={num}
-                  number={num}
-                  entries={chartData[num] || []}
-                  onClick={handleToothClick}
-                  isUpper={true}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t-2 border-dashed border-border my-4 relative">
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-100 dark:bg-pink-900/20 px-2 text-xs text-muted-foreground">
-              Midline
-            </span>
-          </div>
-
-          {/* Lower teeth row */}
-          <div className="flex justify-center gap-1 mt-4">
-            <div className="flex gap-1">
-              {LOWER_RIGHT.map((num) => (
-                <Tooth
-                  key={num}
-                  number={num}
-                  entries={chartData[num] || []}
-                  onClick={handleToothClick}
-                  isUpper={false}
-                />
-              ))}
-            </div>
-            <div className="w-4" /> {/* Center gap */}
-            <div className="flex gap-1">
-              {LOWER_LEFT.map((num) => (
-                <Tooth
-                  key={num}
-                  number={num}
-                  entries={chartData[num] || []}
-                  onClick={handleToothClick}
-                  isUpper={false}
-                />
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const row = (right: number[], left: number[], isUpper: boolean, small = false) => (
+              <div className={`flex justify-center gap-1 ${small ? 'scale-90' : ''}`}>
+                <div className="flex gap-1">
+                  {right.map((num) => (
+                    <Tooth
+                      key={num}
+                      number={num}
+                      entries={chartData[num] || []}
+                      onClick={handleToothClick}
+                      isUpper={isUpper}
+                    />
+                  ))}
+                </div>
+                <div className="w-4" />
+                <div className="flex gap-1">
+                  {left.map((num) => (
+                    <Tooth
+                      key={num}
+                      number={num}
+                      entries={chartData[num] || []}
+                      onClick={handleToothClick}
+                      isUpper={isUpper}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+            const showAdult = dentition !== 'child'
+            const showPrimary = dentition !== 'adult'
+            return (
+              <div className="space-y-3">
+                {showAdult && row(ADULT.upperRight, ADULT.upperLeft, true)}
+                {showPrimary && row(PRIMARY.upperRight, PRIMARY.upperLeft, true, showAdult)}
+                <div className="border-t-2 border-dashed border-border my-4 relative">
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-100 dark:bg-pink-900/20 px-2 text-xs text-muted-foreground">
+                    Midline
+                  </span>
+                </div>
+                {showPrimary && row(PRIMARY.lowerRight, PRIMARY.lowerLeft, false, showAdult)}
+                {showAdult && row(ADULT.lowerRight, ADULT.lowerLeft, false)}
+              </div>
+            )
+          })()}
 
           {/* Lower jaw label */}
           <div className="text-center mt-2 text-sm font-medium text-muted-foreground">
@@ -431,7 +447,7 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <Card className="bg-green-50 dark:bg-green-950/20">
             <CardContent className="pt-4">
               <div className="text-2xl font-bold text-green-600">
-                {32 -
+                {(dentition === 'child' ? 20 : 32) -
                   Object.values(chartData)
                     .flat()
                     .filter(
@@ -490,7 +506,8 @@ export function DentalChart({ patientId }: DentalChartProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                Tooth {selectedTooth} - {selectedTooth ? TOOTH_NAMES[selectedTooth] : ''}
+                Tooth {selectedTooth} -{' '}
+                {selectedTooth ? TOOTH_NAMES[selectedTooth] || toothNames[selectedTooth] : ''}
               </DialogTitle>
               <DialogDescription>View or update the condition of this tooth</DialogDescription>
             </DialogHeader>

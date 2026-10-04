@@ -72,7 +72,8 @@ import { PaymentCheckout } from '@/components/billing/payment-checkout'
 interface Invoice {
   id: string
   invoiceNo: string
-  invoiceDate: string
+  invoiceDate?: string
+  createdAt: string
   dueDate: string | null
   subtotal: string | number
   discountType: string
@@ -236,6 +237,23 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   }
 
+  // Drafts: issue to the patient (then payments can be taken) or cancel
+  const setDraftStatus = async (status: 'PENDING' | 'CANCELLED') => {
+    try {
+      setError('')
+      const res = await fetch(`/api/invoices/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not update the invoice')
+      fetchInvoice()
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
   const handleSharePaymentLink = async () => {
     try {
       setLinkLoading(true)
@@ -341,7 +359,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               </h1>
               {getStatusBadge(invoice.status)}
             </div>
-            <p className="text-muted-foreground">Created on {formatDate(invoice.invoiceDate)}</p>
+            <p className="text-muted-foreground">
+              Created on {formatDate(invoice.invoiceDate || invoice.createdAt)}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -349,6 +369,14 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
+          {invoice.status === 'DRAFT' && (
+            <>
+              <Button variant="outline" onClick={() => setDraftStatus('CANCELLED')}>
+                Cancel draft
+              </Button>
+              <Button onClick={() => setDraftStatus('PENDING')}>Issue invoice</Button>
+            </>
+          )}
           {['PENDING', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) && (
             <>
               <PaymentCheckout
@@ -602,7 +630,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Invoice Date</span>
-                <span>{formatDate(invoice.invoiceDate)}</span>
+                <span>{formatDate(invoice.invoiceDate || invoice.createdAt)}</span>
               </div>
               {invoice.dueDate && (
                 <div className="flex items-center justify-between">

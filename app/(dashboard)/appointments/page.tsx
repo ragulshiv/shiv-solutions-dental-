@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +45,7 @@ import {
   Brain,
   AlertTriangle,
   Loader2,
+  Stethoscope,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
@@ -63,6 +64,7 @@ import {
   getDoctorName,
 } from '@/lib/appointment-utils'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 interface Appointment {
   id: string
@@ -101,8 +103,17 @@ interface PaginationInfo {
   totalPages: number
 }
 
+const todayISO = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export default function AppointmentsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Opens on today's list unless the link asks for something else (?status=, ?date=, ?date=all)
+  const urlStatus = searchParams.get('status')
+  const urlDate = searchParams.get('date')
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -114,9 +125,11 @@ export default function AppointmentsPage() {
 
   // Filters
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(urlStatus || 'all')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [dateFilter, setDateFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState(
+    urlDate === 'all' ? '' : urlDate || (urlStatus ? '' : todayISO())
+  )
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
 
   // AI no-show risk
@@ -324,14 +337,16 @@ export default function AppointmentsPage() {
                 }))
               }
             />
-            <Button variant="outline" size="sm" onClick={fetchNoShowRisk} disabled={riskLoading}>
-              {riskLoading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Brain className="h-4 w-4 mr-2" />
-              )}
-              {showRisk ? 'Refresh Risk' : 'AI Risk'}
-            </Button>
+            <AiOnly>
+              <Button variant="outline" size="sm" onClick={fetchNoShowRisk} disabled={riskLoading}>
+                {riskLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4 mr-2" />
+                )}
+                {showRisk ? 'Refresh Risk' : 'AI Risk'}
+              </Button>
+            </AiOnly>
             <Link href="/appointments/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -388,14 +403,77 @@ export default function AppointmentsPage() {
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
                   className="w-[160px]"
+                  aria-label="Filter by date"
                 />
+                <Button
+                  type="button"
+                  variant={dateFilter === todayISO() ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDateFilter(todayISO())}
+                >
+                  Today
+                </Button>
+                <Button
+                  type="button"
+                  variant={dateFilter === '' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDateFilter('')}
+                >
+                  All dates
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Phone: cards */}
+        <div className="space-y-2 md:hidden">
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))
+          ) : appointments.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-2 py-8">
+                <Calendar className="h-8 w-8 text-muted-foreground" />
+                <p className="text-muted-foreground">No appointments for this day</p>
+              </CardContent>
+            </Card>
+          ) : (
+            appointments.map((a) => (
+              <Card
+                key={a.id}
+                role="link"
+                tabIndex={0}
+                className="cursor-pointer active:bg-muted/50"
+                onClick={() => router.push(`/appointments/${a.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/appointments/${a.id}`)}
+              >
+                <CardContent className="flex items-start justify-between gap-3 p-4">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-medium tabular-nums">
+                      {formatTime(a.scheduledTime)}
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">
+                        {formatDate(a.scheduledDate)}
+                      </span>
+                    </p>
+                    <p className="truncate">{getPatientName(a.patient)}</p>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {getDoctorName(a.doctor)} · {a.duration} min
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {getStatusBadge(a.status)}
+                    {getTypeBadge(a.appointmentType)}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
         {/* Appointments Table */}
-        <Card>
+        <Card className="hidden md:block">
           <CardContent className="p-0 overflow-x-auto">
             <Table className="min-w-[900px]">
               <TableHeader>
@@ -454,7 +532,11 @@ export default function AppointmentsPage() {
                   </TableRow>
                 ) : (
                   appointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
+                    <TableRow
+                      key={appointment.id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/appointments/${appointment.id}`)}
+                    >
                       <TableCell>
                         <div className="font-medium">{appointment.appointmentNo}</div>
                         {appointment.chairNumber && (
@@ -514,11 +596,16 @@ export default function AppointmentsPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label="More actions"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenuItem
                               onClick={() => router.push(`/appointments/${appointment.id}`)}
                             >
@@ -531,6 +618,16 @@ export default function AppointmentsPage() {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            {['CHECKED_IN', 'IN_PROGRESS', 'COMPLETED'].includes(
+                              appointment.status
+                            ) && (
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/visits/${appointment.id}`)}
+                              >
+                                <Stethoscope className="h-4 w-4 mr-2" />
+                                Open visit
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
                               <DropdownMenuItem onClick={() => handleCheckIn(appointment.id)}>

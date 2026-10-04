@@ -34,6 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, dateRangePresets, getDateRangeFromPreset } from '@/lib/billing-utils'
 import { ExportMenu } from '@/components/ui/export-menu'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 interface SummaryData {
   summary: {
@@ -593,19 +594,21 @@ export default function BillingPage() {
               </CardTitle>
               <CardDescription>AI-projected income for the next 30 days</CardDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchCashFlowForecast}
-              disabled={cashFlowLoading}
-            >
-              {cashFlowLoading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Brain className="h-4 w-4 mr-2" />
-              )}
-              {cashFlowData ? 'Refresh' : 'Generate Forecast'}
-            </Button>
+            <AiOnly>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchCashFlowForecast}
+                disabled={cashFlowLoading}
+              >
+                {cashFlowLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4 mr-2" />
+                )}
+                {cashFlowData ? 'Refresh' : 'Generate Forecast'}
+              </Button>
+            </AiOnly>
           </div>
         </CardHeader>
         <CardContent>

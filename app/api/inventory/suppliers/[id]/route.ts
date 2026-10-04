@@ -90,7 +90,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 // PUT - Update supplier
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error, hospitalId } = await requireAuthAndRole()
+  // Stock items and suppliers are managed by clinic admins
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -163,7 +164,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, hospitalId } = await requireAuthAndRole()
+  // Stock items and suppliers are managed by clinic admins
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

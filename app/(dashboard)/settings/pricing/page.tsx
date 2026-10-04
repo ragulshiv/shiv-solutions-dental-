@@ -15,6 +15,9 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAiEnabled } from '@/components/ai/ai-enabled'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Sparkles as AiOffIcon } from 'lucide-react'
 
 interface PricingSuggestion {
   type: string
@@ -59,7 +62,7 @@ interface PricingData {
   }
 }
 
-export default function PricingSuggestionsPage() {
+function PricingSuggestionsPageInner() {
   const [data, setData] = useState<PricingData | null>(null)
   const [loading, setLoading] = useState(false)
   const [generatedAt, setGeneratedAt] = useState<string | null>(null)
@@ -371,4 +374,18 @@ export default function PricingSuggestionsPage() {
       )}
     </div>
   )
+}
+
+export default function PricingSuggestionsPage() {
+  const aiEnabled = useAiEnabled()
+  if (!aiEnabled) {
+    return (
+      <EmptyState
+        icon={AiOffIcon}
+        title="Pricing Advisor is turned off"
+        description="AI features are hidden because no AI key is set up for this clinic. Everything else works as normal."
+      />
+    )
+  }
+  return <PricingSuggestionsPageInner />
 }

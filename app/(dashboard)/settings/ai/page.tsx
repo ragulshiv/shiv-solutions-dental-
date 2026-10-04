@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { AIUsageStats } from '@/components/ai/ai-usage-stats'
+import { useAiEnabled } from '@/components/ai/ai-enabled'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Sparkles as AiOffIcon } from 'lucide-react'
 
 /**
  * AI Settings page — /settings/ai
@@ -33,7 +36,7 @@ const DEFAULTS: AISettings = {
   ai_monthly_budget: 10000,
 }
 
-export default function AISettingsPage() {
+function AISettingsPageInner() {
   const [settings, setSettings] = useState<AISettings>(DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -310,4 +313,18 @@ function ToggleSwitch({
       />
     </button>
   )
+}
+
+export default function AISettingsPage() {
+  const aiEnabled = useAiEnabled()
+  if (!aiEnabled) {
+    return (
+      <EmptyState
+        icon={AiOffIcon}
+        title="AI Features is turned off"
+        description="AI features are hidden because no AI key is set up for this clinic. Everything else works as normal."
+      />
+    )
+  }
+  return <AISettingsPageInner />
 }

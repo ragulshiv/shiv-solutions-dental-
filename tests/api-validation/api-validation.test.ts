@@ -356,14 +356,14 @@ describe('5.2 Status Codes', () => {
       id: 'p-1',
       firstName: 'Jane',
       lastName: 'Doe',
-      phone: '1234567890',
+      phone: '9234567890',
     })
 
     const res = await postPatient(
       makeRequest('/api/patients', 'POST', {
         firstName: 'Jane',
         lastName: 'Doe',
-        phone: '1234567890',
+        phone: '9234567890',
       })
     )
     expect(res.status).toBe(201)
@@ -566,14 +566,14 @@ describe('5.4 Edge Cases', () => {
       id: 'p-emoji',
       firstName: 'Héllo 🦷',
       lastName: 'Wörld 🌍',
-      phone: '5551234567',
+      phone: '9551234567',
     })
 
     const res = await postPatient(
       makeRequest('/api/patients', 'POST', {
         firstName: 'Héllo 🦷',
         lastName: 'Wörld 🌍',
-        phone: '5551234567',
+        phone: '9551234567',
       })
     )
     expect(res.status).toBe(201)

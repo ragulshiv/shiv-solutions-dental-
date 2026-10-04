@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ClipboardList, Plus, Trash2, Loader2, Search, ArrowLeft } from 'lucide-react'
+import { RX_TEMPLATES, type RxTemplate } from '@/lib/rx-templates'
 
 interface Patient {
   id: string
@@ -100,7 +101,10 @@ export default function NewPrescriptionPage() {
   const [activeMedRow, setActiveMedRow] = useState<number | null>(null)
 
   // Form data
-  const [diagnosis, setDiagnosis] = useState('')
+  // Written from the visit screen: link the Rx to that visit and go back there after saving
+  const appointmentId = searchParams.get('appointmentId')
+  const returnTo = searchParams.get('returnTo')
+  const [diagnosis, setDiagnosis] = useState(searchParams.get('diagnosis') || '')
   const [notes, setNotes] = useState('')
   const [validUntil, setValidUntil] = useState('')
   const [medications, setMedications] = useState<MedicationRow[]>([
@@ -125,10 +129,9 @@ export default function NewPrescriptionPage() {
       fetch(`/api/patients/${pid}`)
         .then((r) => r.json())
         .then((result) => {
-          if (result.success || result.data || result.id) {
-            const p = result.data || result
-            setSelectedPatient(p)
-          }
+          // GET /api/patients/[id] returns { success, patient }
+          const p = result.patient || result.data || (result.id ? result : null)
+          if (p?.id) setSelectedPatient(p)
         })
         .catch(() => {})
     }
@@ -225,8 +228,25 @@ export default function NewPrescriptionPage() {
     setMedications((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Fill rows from a template: replaces the blank starter row, adds to rows already typed
+  const applyTemplate = (t: RxTemplate) => {
+    const rows: MedicationRow[] = t.lines.map((l) => ({
+      key: ++rowKey,
+      medicationId: null,
+      medicationName: l.medicationName,
+      dosage: l.dosage,
+      frequency: l.frequency,
+      duration: l.duration,
+      route: l.route || 'Oral',
+      timing: l.timing || '',
+      quantity: '',
+      instructions: l.instructions || '',
+    }))
+    setMedications((prev) => [...prev.filter((r) => r.medicationName.trim()), ...rows])
+  }
+
   const handleSubmit = async () => {
-    if (!selectedPatient) {
+    if (!selectedPatient?.id) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please select a patient' })
       return
     }
@@ -250,6 +270,7 @@ export default function NewPrescriptionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
+          appointmentId: appointmentId || undefined,
           diagnosis,
           notes,
           validUntil: validUntil || null,
@@ -273,7 +294,9 @@ export default function NewPrescriptionPage() {
         title: 'Prescription created',
         description: `${result.data.prescriptionNo} saved successfully`,
       })
-      router.push(`/prescriptions/${result.data.id}`)
+      router.push(
+        returnTo && returnTo.startsWith('/') ? returnTo : `/prescriptions/${result.data.id}`
+      )
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
@@ -283,8 +306,15 @@ export default function NewPrescriptionPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <Button variant="ghost" className="mb-4" onClick={() => router.push('/prescriptions')}>
-        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Prescriptions
+      <Button
+        variant="ghost"
+        className="mb-4"
+        onClick={() =>
+          router.push(returnTo && returnTo.startsWith('/') ? returnTo : '/prescriptions')
+        }
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />{' '}
+        {returnTo ? 'Back to visit' : 'Back to Prescriptions'}
       </Button>
 
       <div className="mb-6">
@@ -396,10 +426,23 @@ export default function NewPrescriptionPage() {
           <CardHeader>
             <CardTitle>Medications</CardTitle>
             <CardDescription>
-              Add medications from your drug catalog or type manually
+              Start from a template or type medicines. Check every line before saving.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2" aria-label="Prescription templates">
+              {RX_TEMPLATES.map((t) => (
+                <Button
+                  key={t.name}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applyTemplate(t)}
+                >
+                  {t.name}
+                </Button>
+              ))}
+            </div>
             {medications.map((med, index) => (
               <div key={med.key} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">

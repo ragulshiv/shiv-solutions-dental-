@@ -96,7 +96,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new supplier
 export async function POST(request: NextRequest) {
-  const { error, hospitalId } = await requireAuthAndRole()
+  // Stock items and suppliers are managed by clinic admins
+  const { error, hospitalId } = await requireAuthAndRole(['ADMIN'])
 
   if (error || !hospitalId) {
     return error || NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

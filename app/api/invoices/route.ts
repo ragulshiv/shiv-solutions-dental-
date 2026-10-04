@@ -4,6 +4,9 @@ import { requireAuthAndRole } from '@/lib/api-helpers'
 import { generateInvoiceNo, calculateInvoiceTotals, gstConfig } from '@/lib/billing-utils'
 import { DiscountType, InvoiceStatus } from '@prisma/client'
 
+// Doctors can bill too: solo dentists often work without a receptionist
+const BILLING_ROLES = ['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST', 'DOCTOR']
+
 // GET - List invoices with filters
 export async function GET(request: NextRequest) {
   const { error, hospitalId, session } = await requireAuthAndRole()
@@ -165,7 +168,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check if user has permission
-    if (!['ADMIN', 'ACCOUNTANT', 'RECEPTIONIST'].includes(session.user.role)) {
+    if (!BILLING_ROLES.includes(session.user.role)) {
       return NextResponse.json(
         { error: "You don't have permission to create invoices" },
         { status: 403 }
@@ -213,6 +216,49 @@ export async function POST(request: NextRequest) {
               'Invalid item data. Description, quantity (>0), and unit price (>=0) are required',
           },
           { status: 400 }
+        )
+      }
+    }
+
+    const discount = Number(discountValue) || 0
+    if (discount < 0) {
+      return NextResponse.json({ error: 'Discount cannot be negative' }, { status: 400 })
+    }
+    if (discountType === 'PERCENTAGE' && discount > 100) {
+      return NextResponse.json(
+        { error: 'Percentage discount cannot be more than 100%' },
+        { status: 400 }
+      )
+    }
+    if (discountType !== 'PERCENTAGE') {
+      const gross = items.reduce(
+        (sum: number, i: any) => sum + Number(i.quantity) * Number(i.unitPrice),
+        0
+      )
+      if (discount > gross) {
+        return NextResponse.json(
+          { error: 'Discount cannot be more than the bill amount' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // A treatment can be on only one bill
+    const treatmentIds = items.map((i: any) => i.treatmentId).filter(Boolean)
+    if (treatmentIds.length > 0) {
+      const alreadyBilled = await prisma.invoiceItem.findFirst({
+        where: {
+          treatmentId: { in: treatmentIds },
+          invoice: { hospitalId, status: { not: 'CANCELLED' } },
+        },
+        select: { description: true, invoice: { select: { invoiceNo: true } } },
+      })
+      if (alreadyBilled) {
+        return NextResponse.json(
+          {
+            error: `"${alreadyBilled.description}" is already on invoice ${alreadyBilled.invoice.invoiceNo}`,
+          },
+          { status: 409 }
         )
       }
     }

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getNavigationForRole } from '@/config/nav'
+import { useAiEnabled, AI_ONLY_PATHS } from '@/components/ai/ai-enabled'
 import { useSidebar } from './sidebar-context'
 
 // The daily tabs, in order. Each only shows if the user's role can see it in
@@ -19,7 +20,10 @@ export function BottomNav({ role }: { role: string }) {
   const pathname = usePathname()
   const { setMobileOpen } = useSidebar()
 
-  const allItems = getNavigationForRole(role).flatMap((section) => section.items)
+  const aiEnabled = useAiEnabled()
+  const allItems = getNavigationForRole(role, aiEnabled ? [] : AI_ONLY_PATHS).flatMap(
+    (section) => section.items
+  )
   const tabs = TAB_HREFS.map((href) => allItems.find((item) => item.href === href)).filter(
     (item): item is (typeof allItems)[number] => Boolean(item)
   )

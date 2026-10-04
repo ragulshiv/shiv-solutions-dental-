@@ -206,11 +206,12 @@ describe('Patients API - POST /api/patients', () => {
     expect(data.error).toContain('required')
   })
 
-  it('should return 409 for duplicate phone number', async () => {
+  it('allows family members to share a phone number', async () => {
     vi.mocked(prisma.patient.findFirst).mockResolvedValue({
       id: 'existing-patient',
       phone: '9876543210',
     } as any)
+    vi.mocked(prisma.patient.create).mockResolvedValue({ id: 'new-patient' } as any)
 
     const request = new NextRequest('http://localhost:3000/api/patients', {
       method: 'POST',
@@ -222,9 +223,7 @@ describe('Patients API - POST /api/patients', () => {
     })
     const response = await POST(request)
 
-    expect(response.status).toBe(409)
-    const data = await response.json()
-    expect(data.error).toContain('phone number already exists')
+    expect(response.status).toBe(201)
   })
 
   it('should return 403 when patient limit is reached', async () => {

@@ -48,6 +48,7 @@ import {
 } from 'recharts'
 
 import { ReportBuilder } from '@/components/ai/report-builder'
+import { AiOnly } from '@/components/ai/ai-enabled'
 
 // Chart colors
 const CHART_COLORS = [
@@ -324,7 +325,9 @@ export default function ReportsPage() {
       {/* AI Report Builder */}
       <Card>
         <CardContent className="pt-6">
-          <ReportBuilder />
+          <AiOnly>
+            <ReportBuilder />
+          </AiOnly>
         </CardContent>
       </Card>
 

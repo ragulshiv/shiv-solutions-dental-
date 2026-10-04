@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole } from '@/lib/api-helpers'
+import { redactStaff } from '@/lib/staff-privacy'
 import bcrypt from 'bcryptjs'
+import { stripDoctorPrefix } from '@/lib/utils'
 
 // GET - Get single staff member details
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +44,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Staff not found' }, { status: 404 })
     }
 
-    return NextResponse.json(staff)
+    // Staff can see their own full record; only admins see others' pay and ID details
+    const isSelf = (staff as any).userId === session?.user?.id
+    return NextResponse.json(isSelf ? staff : redactStaff(staff, session?.user?.role))
   } catch (error) {
     console.error('Error fetching staff:', error)
     return NextResponse.json({ error: 'Failed to fetch staff details' }, { status: 500 })
@@ -125,7 +129,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const updatedStaff = await tx.staff.update({
         where: { id },
         data: {
-          ...(firstName && { firstName }),
+          ...(firstName && { firstName: stripDoctorPrefix(firstName) }),
           ...(lastName && { lastName }),
           ...(phone && { phone }),
           ...(alternatePhone !== undefined && { alternatePhone }),

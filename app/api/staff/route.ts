@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuthAndRole, checkStaffLimit } from '@/lib/api-helpers'
+import { redactStaff } from '@/lib/staff-privacy'
 import bcrypt from 'bcryptjs'
+import { stripDoctorPrefix } from '@/lib/utils'
 
 // GET - List staff members
 export async function GET(request: NextRequest) {
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      staff,
+      staff: staff.map((st) => redactStaff(st, session?.user?.role)),
       pagination: {
         page,
         limit,
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
+    let {
       firstName,
       lastName,
       email,
@@ -155,6 +157,8 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
+    firstName = typeof firstName === 'string' ? stripDoctorPrefix(firstName) : firstName
+
     if (!firstName || !lastName || !email || !phone || !role || !password) {
       return NextResponse.json(
         { error: 'Missing required fields: firstName, lastName, email, phone, role, password' },
